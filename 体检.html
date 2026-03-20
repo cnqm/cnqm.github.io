@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 类型在上 相机在下</title>
+    <title>体检拍照 · PC优化版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -16,115 +16,134 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 8px;
+            padding: 16px;
         }
         .card {
-            max-width: 750px;
+            max-width: 1400px;      /* 大屏宽 */
             width: 100%;
             background: white;
-            border-radius: 28px;
-            box-shadow: 0 20px 40px -10px rgba(0,40,70,0.2);
-            padding: 20px 18px 24px;
+            border-radius: 32px;
+            box-shadow: 0 30px 50px -20px rgba(0,40,70,0.3);
+            padding: 28px 30px 32px;
             border: 1px solid rgba(255,255,255,0.7);
         }
         h1 {
-            font-size: 1.8rem;
+            font-size: 2.2rem;
             font-weight: 650;
-            margin: 0 0 6px 0;
+            margin: 0 0 8px 0;
             color: #10455c;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
             flex-wrap: wrap;
         }
         .badge {
             background: #c2e2f2;
-            font-size: 0.8rem;
-            padding: 4px 12px;
-            border-radius: 50px;
+            font-size: 1rem;
+            padding: 6px 20px;
+            border-radius: 60px;
             color: #0e4c6b;
             font-weight: 500;
         }
         .sub {
             background: #dcf0fa;
-            border-radius: 24px;
-            padding: 10px 16px;
-            margin-bottom: 16px;
+            border-radius: 30px;
+            padding: 14px 24px;
+            margin-bottom: 24px;
             color: #144e6b;
             font-weight: 500;
-            border-left: 6px solid #3080b0;
-            font-size: 0.95rem;
+            border-left: 8px solid #3080b0;
+            font-size: 1.1rem;
+            line-height: 1.5;
         }
-        /* 导入名单区域 */
+        /* 导入名单区域 - PC上更紧凑且可横排 */
         .roster-section {
             background: #ecf5fc;
-            border-radius: 24px;
-            padding: 14px 14px;
-            margin-bottom: 16px;
+            border-radius: 28px;
+            padding: 18px 22px;
+            margin-bottom: 24px;
             border: 1px solid #c1ddef;
         }
         .roster-header {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 20px;
             flex-wrap: wrap;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
         .import-btn {
             background: #3080b0;
             border: none;
             color: white;
-            padding: 10px 20px;
-            border-radius: 40px;
+            padding: 14px 32px;
+            border-radius: 60px;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,80,120,0.2);
+            box-shadow: 0 6px 12px rgba(0,80,120,0.25);
             border: 1px solid #9ac9e6;
+            transition: 0.1s;
+        }
+        .import-btn:hover {
+            background: #1f6a94;
         }
         .file-name {
             color: #1d6285;
-            font-size: 0.85rem;
+            font-size: 1rem;
             background: white;
-            padding: 6px 14px;
-            border-radius: 40px;
+            padding: 8px 22px;
+            border-radius: 60px;
             border: 1px solid #b3d3ea;
-            max-width: 180px;
+            max-width: 300px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+        /* 搜索行：搜索框和结果区域 */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
         .search-box {
             width: 100%;
-            padding: 12px 16px;
+            padding: 16px 24px;
             border: 2px solid #b7d3e8;
-            border-radius: 50px;
-            font-size: 0.95rem;
+            border-radius: 60px;
+            font-size: 1.1rem;
             background: white;
-            margin: 8px 0 6px;
+            margin: 0 0 8px 0;
+        }
+        .search-box:focus {
+            border-color: #2079b0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(32,121,176,0.2);
         }
         .roster-results {
-            max-height: 150px;
+            max-height: 200px;
             overflow-y: auto;
             background: white;
-            border-radius: 20px;
-            padding: 6px 4px;
+            border-radius: 24px;
+            padding: 10px 8px;
             border: 1px solid #c3daef;
             display: none;
+            position: absolute;
+            width: 100%;
+            z-index: 10;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         }
         .roster-results.show {
             display: block;
         }
         .roster-item {
-            padding: 10px 14px;
+            padding: 14px 20px;
             border-bottom: 1px solid #e2edf7;
             cursor: pointer;
             display: flex;
-            gap: 10px;
-            font-size: 0.95rem;
+            gap: 20px;
+            font-size: 1.05rem;
             align-items: center;
         }
         .roster-item:hover {
@@ -133,160 +152,187 @@
         .roster-item .roster-name {
             font-weight: 600;
             color: #0f5275;
-            min-width: 90px;
+            min-width: 120px;
         }
         .roster-item .roster-idcard {
             color: #1b4055;
             font-family: monospace;
-            font-size: 0.9rem;
+            font-size: 1rem;
             word-break: break-all;
         }
         .roster-info {
             color: #2f6c93;
-            font-size: 0.85rem;
-            margin: 6px 0 0;
+            font-size: 0.95rem;
+            margin: 10px 0 0;
         }
 
+        /* 输入区域 + 自动递增 并排放置 */
+        .input-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
+            align-items: flex-end;
+        }
         .input-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 12px;
+            gap: 20px;
+            flex: 3 1 500px;
         }
         .input-field {
-            flex: 1 1 180px;
+            flex: 1 1 200px;
         }
         .input-field label {
             display: block;
             font-weight: 600;
             color: #124f6e;
-            margin-bottom: 4px;
-            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-size: 1rem;
         }
         .input-field input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 16px 20px;
             border: 2px solid #c7ddec;
-            border-radius: 40px;
-            font-size: 1rem;
+            border-radius: 50px;
+            font-size: 1.1rem;
             background: white;
+            transition: 0.2s;
         }
-        .auto-inc-row {
+        .input-field input:focus {
+            border-color: #2079b0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(32,121,176,0.2);
+        }
+        .auto-inc-wrapper {
+            flex: 1 1 250px;
             display: flex;
             align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin: 0 0 12px 0;
+            gap: 15px;
+            background: #eaf4fb;
+            padding: 12px 24px;
+            border-radius: 60px;
+            height: fit-content;
         }
         .checkbox-item {
             display: flex;
             align-items: center;
-            gap: 6px;
-            background: #eaf4fb;
-            padding: 6px 16px;
-            border-radius: 40px;
+            gap: 8px;
         }
         .checkbox-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             accent-color: #1b7aa6;
             margin: 0;
         }
         .checkbox-item label {
             font-weight: 600;
             color: #0c4c6b;
-            font-size: 0.95rem;
+            font-size: 1.05rem;
         }
         .hint-note {
             color: #3f6f8f;
-            font-size: 0.85rem;
+            font-size: 0.95rem;
         }
 
-        /* 类型选择面板 - 现在放在相机上方 */
+        /* 类型选择面板 - 现在放在相机上方，PC上网格列数增加 */
         .type-section {
             background: #f2f9ff;
-            border-radius: 24px;
-            padding: 16px 14px 14px;
-            margin: 10px 0 16px;
+            border-radius: 28px;
+            padding: 22px 24px;
+            margin: 0 0 24px 0;
         }
         .type-header {
             font-weight: 650;
             color: #0a4a64;
-            margin-bottom: 12px;
-            font-size: 1.1rem;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 10px;
         }
         .type-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-            gap: 10px;
-            margin-bottom: 14px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
         }
         .type-btn {
             background: white;
             border: 2px solid #c0d9eb;
-            border-radius: 40px;
-            padding: 10px 4px;
-            font-size: 0.9rem;
+            border-radius: 60px;
+            padding: 14px 8px;
+            font-size: 1rem;
             font-weight: 600;
             color: #154a64;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 8px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            transition: 0.1s;
+        }
+        .type-btn:hover {
+            background: #e2f0fa;
         }
         .type-btn.active {
             background: #1c7aa6;
             border-color: #0d4c6b;
             color: white;
-            box-shadow: 0 4px 10px rgba(20,110,150,0.3);
+            box-shadow: 0 6px 14px rgba(20,110,150,0.3);
         }
         .type-btn .emoji {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
         }
         .custom-row {
             display: flex;
-            gap: 10px;
+            gap: 16px;
             align-items: center;
             flex-wrap: wrap;
-            margin-top: 6px;
+            margin-top: 10px;
         }
         .custom-row input {
-            flex: 2 1 200px;
-            padding: 12px 16px;
+            flex: 2 1 300px;
+            padding: 16px 24px;
             border: 2px solid #b7d3e8;
-            border-radius: 40px;
-            font-size: 0.95rem;
+            border-radius: 60px;
+            font-size: 1.05rem;
             background: white;
         }
         .custom-row button {
             background: #1b6990;
             border: none;
             color: white;
-            padding: 12px 22px;
-            border-radius: 40px;
+            padding: 16px 32px;
+            border-radius: 60px;
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 5px;
-            box-shadow: 0 6px 12px rgba(10,90,130,0.2);
+            gap: 8px;
+            box-shadow: 0 8px 16px rgba(10,90,130,0.25);
             cursor: pointer;
             border: 1px solid #91c7e6;
+            transition: 0.1s;
+        }
+        .custom-row button:hover {
+            background: #0f5a80;
         }
 
+        /* 相机和拍照按钮 */
+        .camera-section {
+            display: flex;
+            flex-direction: column;
+        }
         .video-container {
             background: #102e3c;
-            border-radius: 24px;
+            border-radius: 28px;
             overflow: hidden;
-            margin: 8px 0 16px;
-            aspect-ratio: 4/3;
-            border: 3px solid white;
-            box-shadow: 0 12px 20px -8px #0d3647;
+            margin: 0 0 20px 0;
+            aspect-ratio: 16/9;   /* PC上更宽 */
+            border: 4px solid white;
+            box-shadow: 0 18px 30px -8px #0d3647;
         }
         video {
             width: 100%;
@@ -295,157 +341,150 @@
             display: block;
             background: #264653;
         }
-
         .shoot-single {
             background: linear-gradient(145deg, #176d8f, #0a4b68);
             border: none;
             width: 100%;
-            padding: 18px 12px;
-            border-radius: 60px;
-            font-size: 1.8rem;
+            padding: 24px 12px;
+            border-radius: 80px;
+            font-size: 2.4rem;
             font-weight: 700;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            box-shadow: 0 16px 24px -8px #0a4055;
-            margin: 8px 0 16px;
+            gap: 20px;
+            box-shadow: 0 20px 30px -8px #0a4055;
+            margin: 0 0 20px 0;
             cursor: pointer;
-            border: 2px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255,255,255,0.3);
+            transition: 0.1s;
+        }
+        .shoot-single:hover {
+            background: linear-gradient(145deg, #1e85af, #0e5f80);
+            transform: scale(1.01);
         }
         .shoot-single:active {
-            transform: scale(0.97);
+            transform: scale(0.98);
         }
+
         .preview-bar {
             background: #e2f0f9;
-            border-radius: 50px;
-            padding: 12px 18px;
+            border-radius: 60px;
+            padding: 18px 28px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 20px;
             flex-wrap: wrap;
-            margin: 10px 0 8px;
+            margin: 0 0 12px 0;
             border: 1px solid #b3d5ed;
         }
         .preview-label {
             font-weight: 600;
             color: #165a79;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
         .preview-filename {
             background: #10455e;
             color: white;
-            padding: 6px 20px;
-            border-radius: 40px;
+            padding: 10px 32px;
+            border-radius: 60px;
             font-family: 'Courier New', monospace;
             font-weight: 600;
-            font-size: 1.1rem;
-            letter-spacing: 0.3px;
+            font-size: 1.3rem;
+            letter-spacing: 0.5px;
             word-break: break-all;
         }
         .status {
             text-align: center;
-            margin: 12px 0 0;
+            margin: 16px 0 0;
             color: #186585;
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
         footer {
             text-align: center;
             color: #6f8fa8;
-            font-size: 0.8rem;
-            margin-top: 18px;
+            font-size: 0.95rem;
+            margin-top: 28px;
             border-top: 1px dashed #b9d3e7;
-            padding-top: 14px;
+            padding-top: 20px;
         }
 
-        /* 手机专用优化 */
-        @media (max-width: 600px) {
+        /* 手机专用覆盖 (保留之前的手机优化) */
+        @media (max-width: 800px) {
             .card {
-                padding: 16px 14px 20px;
-                border-radius: 24px;
+                padding: 20px 18px 24px;
             }
             h1 {
-                font-size: 1.6rem;
+                font-size: 1.8rem;
             }
             .badge {
-                font-size: 0.7rem;
-                padding: 3px 10px;
+                font-size: 0.8rem;
+                padding: 4px 12px;
             }
             .sub {
-                font-size: 0.9rem;
-                padding: 8px 14px;
+                font-size: 0.95rem;
+                padding: 12px 16px;
             }
             .roster-section {
-                padding: 12px 10px;
+                padding: 14px 14px;
             }
             .import-btn {
-                padding: 8px 16px;
-                font-size: 0.9rem;
+                padding: 10px 20px;
+                font-size: 0.95rem;
             }
             .file-name {
-                max-width: 140px;
-                font-size: 0.8rem;
+                max-width: 180px;
+                font-size: 0.85rem;
             }
             .search-box {
-                padding: 10px 14px;
-                font-size: 0.9rem;
+                padding: 12px 16px;
+                font-size: 0.95rem;
             }
             .roster-item {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-            }
-            .roster-item .roster-name {
-                min-width: 70px;
-            }
-            .input-field input {
                 padding: 10px 14px;
                 font-size: 0.95rem;
             }
-            .checkbox-item {
-                padding: 5px 12px;
+            .roster-item .roster-name {
+                min-width: 90px;
             }
-            .checkbox-item label {
-                font-size: 0.9rem;
+            .input-panel {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .input-row {
+                width: 100%;
+            }
+            .auto-inc-wrapper {
+                width: 100%;
+                justify-content: space-between;
             }
             .type-grid {
                 grid-template-columns: repeat(2, 1fr);
-                gap: 8px;
+                gap: 10px;
             }
             .type-btn {
                 padding: 10px 4px;
                 font-size: 0.9rem;
             }
             .custom-row input {
-                padding: 10px 14px;
-                font-size: 0.9rem;
+                padding: 12px 16px;
             }
             .custom-row button {
-                padding: 10px 18px;
-                font-size: 0.95rem;
+                padding: 12px 22px;
             }
             .shoot-single {
-                font-size: 1.6rem;
-                padding: 16px 10px;
-                border-radius: 50px;
-            }
-            .preview-bar {
-                padding: 10px 14px;
+                font-size: 1.8rem;
+                padding: 18px 12px;
             }
             .preview-filename {
                 font-size: 1rem;
-                padding: 5px 16px;
-            }
-            .status {
-                font-size: 0.9rem;
-            }
-            footer {
-                font-size: 0.75rem;
+                padding: 6px 20px;
             }
         }
 
-        @media (max-width: 380px) {
+        @media (max-width: 480px) {
             .type-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
@@ -464,10 +503,10 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">导入姓名+身份证</span>
+            <span class="badge">PC宽屏优化 · 导入姓名+身份证</span>
         </h1>
         <div class="sub">
-            ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg)<br>
+            ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg) &nbsp;&nbsp; | &nbsp;&nbsp;
             ⚡ 导入文件格式：姓名,身份证号 (或空格分隔)
         </div>
 
@@ -478,32 +517,35 @@
                 <span class="file-name" id="fileNameDisplay">未选择文件</span>
                 <input type="file" id="importFile" accept=".txt,.csv" style="display: none;">
             </div>
-            <input type="text" class="search-box" id="searchInput" placeholder="🔍 输入姓名或身份证号搜索..." autocomplete="off">
-            <div class="roster-results" id="rosterResults"></div>
+            <div class="search-wrapper">
+                <input type="text" class="search-box" id="searchInput" placeholder="🔍 输入姓名或身份证号搜索..." autocomplete="off">
+                <div class="roster-results" id="rosterResults"></div>
+            </div>
             <div class="roster-info" id="rosterInfo">尚未导入名单，请先导入。</div>
         </div>
 
-        <!-- 编号 + 姓名 + 自动递增 -->
-        <div class="input-row">
-            <div class="input-field">
-                <label>🔖 编号 <span style="font-weight:normal; color:#3b6f92;">(手动)</span></label>
-                <input type="text" id="idNumber" placeholder="例如 102" value="">
+        <!-- 编号 + 姓名 + 自动递增 (并排放置) -->
+        <div class="input-panel">
+            <div class="input-row">
+                <div class="input-field">
+                    <label>🔖 编号 <span style="font-weight:normal; color:#3b6f92;">(手动)</span></label>
+                    <input type="text" id="idNumber" placeholder="例如 102" value="">
+                </div>
+                <div class="input-field">
+                    <label>🧑 姓名</label>
+                    <input type="text" id="fullName" placeholder="搜索或手动输入" value="">
+                </div>
             </div>
-            <div class="input-field">
-                <label>🧑 姓名</label>
-                <input type="text" id="fullName" placeholder="搜索或手动输入" value="">
+            <div class="auto-inc-wrapper">
+                <div class="checkbox-item">
+                    <input type="checkbox" id="autoIncrementCheckbox">
+                    <label for="autoIncrementCheckbox">🔁 自动递增编号</label>
+                </div>
+                <span class="hint-note">(仅数字)</span>
             </div>
-        </div>
-        
-        <div class="auto-inc-row">
-            <div class="checkbox-item">
-                <input type="checkbox" id="autoIncrementCheckbox">
-                <label for="autoIncrementCheckbox">🔁 拍照后自动递增编号</label>
-            </div>
-            <span class="hint-note">(仅数字编号有效)</span>
         </div>
 
-        <!-- 类型选择面板 - 现在位于相机之前 -->
+        <!-- 类型选择面板 - 在相机之前，PC上网格更密 -->
         <div class="type-section">
             <div class="type-header">
                 <span>🔘 选择检查类型 (单击选中)</span>
@@ -511,20 +553,20 @@
             <div class="type-grid" id="typeGrid"></div>
             <div class="custom-row">
                 <input type="text" id="customTypeInput" placeholder="例如：骨密度 / 眼底照相" value="">
-                <button id="addCustomBtn">➕ 添加</button>
+                <button id="addCustomBtn">➕ 添加自定义</button>
             </div>
-            <div style="font-size:0.8rem; color:#1e6791; margin-top:8px;">点击自定义项即可切换选中</div>
+            <div style="font-size:0.9rem; color:#1e6791; margin-top:12px;">点击自定义项即可切换选中</div>
         </div>
 
-        <!-- 摄像头 -->
-        <div class="video-container">
-            <video id="video" autoplay playsinline></video>
+        <!-- 摄像头 + 拍照按钮 -->
+        <div class="camera-section">
+            <div class="video-container">
+                <video id="video" autoplay playsinline></video>
+            </div>
+            <button class="shoot-single" id="singleShootBtn">
+                <span>📸</span> 拍 照 保 存 <span>🩻</span>
+            </button>
         </div>
-
-        <!-- 唯一拍照按钮 -->
-        <button class="shoot-single" id="singleShootBtn">
-            <span>📸</span> 拍 照 保 存 <span>🩻</span>
-        </button>
 
         <!-- 文件名实时预览 -->
         <div class="preview-bar">
@@ -534,7 +576,7 @@
 
         <div id="statusMessage" class="status">✅ 选择类型，点击拍照</div>
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入
+            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入 · PC宽屏优化
         </footer>
     </div>
 
