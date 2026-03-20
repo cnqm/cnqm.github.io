@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · PC优化版</title>
+    <title>体检拍照 · PC优化 相机左置</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,10 +19,10 @@
             padding: 16px;
         }
         .card {
-            max-width: 1400px;      /* 大屏宽 */
+            max-width: 1600px;      /* 更宽 */
             width: 100%;
             background: white;
-            border-radius: 32px;
+            border-radius: 36px;
             box-shadow: 0 30px 50px -20px rgba(0,40,70,0.3);
             padding: 28px 30px 32px;
             border: 1px solid rgba(255,255,255,0.7);
@@ -56,12 +56,50 @@
             font-size: 1.1rem;
             line-height: 1.5;
         }
-        /* 导入名单区域 - PC上更紧凑且可横排 */
+
+        /* 左右布局容器 */
+        .main-row {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;  /* 手机时换行 */
+        }
+        /* 左侧相机区域 */
+        .camera-left {
+            flex: 1.2 1 400px;        /* 最小400px，相对更宽 */
+            min-width: 360px;
+        }
+        .video-container {
+            background: #102e3c;
+            border-radius: 28px;
+            overflow: hidden;
+            aspect-ratio: 4/3;         /* 保持4:3 */
+            border: 4px solid white;
+            box-shadow: 0 18px 30px -8px #0d3647;
+            width: 100%;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #264653;
+        }
+
+        /* 右侧控制面板 */
+        .right-panel {
+            flex: 2 1 500px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 400px;
+        }
+
+        /* 导入名单区域 */
         .roster-section {
             background: #ecf5fc;
             border-radius: 28px;
             padding: 18px 22px;
-            margin-bottom: 24px;
             border: 1px solid #c1ddef;
         }
         .roster-header {
@@ -102,7 +140,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-        /* 搜索行：搜索框和结果区域 */
         .search-wrapper {
             position: relative;
             width: 100%;
@@ -170,15 +207,17 @@
         .input-panel {
             display: flex;
             flex-wrap: wrap;
-            gap: 24px;
-            margin-bottom: 24px;
+            gap: 20px;
             align-items: flex-end;
+            background: #f7fafd;
+            padding: 16px 20px;
+            border-radius: 28px;
         }
         .input-row {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            flex: 3 1 500px;
+            flex: 3 1 400px;
         }
         .input-field {
             flex: 1 1 200px;
@@ -205,7 +244,7 @@
             box-shadow: 0 0 0 3px rgba(32,121,176,0.2);
         }
         .auto-inc-wrapper {
-            flex: 1 1 250px;
+            flex: 1 1 240px;
             display: flex;
             align-items: center;
             gap: 15px;
@@ -235,12 +274,11 @@
             font-size: 0.95rem;
         }
 
-        /* 类型选择面板 - 现在放在相机上方，PC上网格列数增加 */
+        /* 类型选择面板 */
         .type-section {
             background: #f2f9ff;
             border-radius: 28px;
             padding: 22px 24px;
-            margin: 0 0 24px 0;
         }
         .type-header {
             font-weight: 650;
@@ -320,34 +358,14 @@
             background: #0f5a80;
         }
 
-        /* 相机和拍照按钮 */
-        .camera-section {
-            display: flex;
-            flex-direction: column;
-        }
-        .video-container {
-            background: #102e3c;
-            border-radius: 28px;
-            overflow: hidden;
-            margin: 0 0 20px 0;
-            aspect-ratio: 16/9;   /* PC上更宽 */
-            border: 4px solid white;
-            box-shadow: 0 18px 30px -8px #0d3647;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            background: #264653;
-        }
+        /* 拍照按钮 (在右侧) */
         .shoot-single {
             background: linear-gradient(145deg, #176d8f, #0a4b68);
             border: none;
             width: 100%;
-            padding: 24px 12px;
+            padding: 22px 12px;
             border-radius: 80px;
-            font-size: 2.4rem;
+            font-size: 2rem;
             font-weight: 700;
             color: white;
             display: flex;
@@ -355,10 +373,10 @@
             justify-content: center;
             gap: 20px;
             box-shadow: 0 20px 30px -8px #0a4055;
-            margin: 0 0 20px 0;
             cursor: pointer;
             border: 3px solid rgba(255,255,255,0.3);
             transition: 0.1s;
+            margin-top: 10px;
         }
         .shoot-single:hover {
             background: linear-gradient(145deg, #1e85af, #0e5f80);
@@ -376,7 +394,6 @@
             align-items: center;
             gap: 20px;
             flex-wrap: wrap;
-            margin: 0 0 12px 0;
             border: 1px solid #b3d5ed;
         }
         .preview-label {
@@ -397,7 +414,6 @@
         }
         .status {
             text-align: center;
-            margin: 16px 0 0;
             color: #186585;
             font-weight: 500;
             font-size: 1.1rem;
@@ -411,8 +427,18 @@
             padding-top: 20px;
         }
 
-        /* 手机专用覆盖 (保留之前的手机优化) */
-        @media (max-width: 800px) {
+        /* 手机适配：垂直排列 */
+        @media (max-width: 900px) {
+            .main-row {
+                flex-direction: column;
+            }
+            .camera-left {
+                width: 100%;
+            }
+            .right-panel {
+                width: 100%;
+                min-width: auto;
+            }
             .card {
                 padding: 20px 18px 24px;
             }
@@ -451,10 +477,7 @@
             }
             .input-panel {
                 flex-direction: column;
-                gap: 16px;
-            }
-            .input-row {
-                width: 100%;
+                align-items: stretch;
             }
             .auto-inc-wrapper {
                 width: 100%;
@@ -503,80 +526,91 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">PC宽屏优化 · 导入姓名+身份证</span>
+            <span class="badge">相机左置 · 导入姓名+身份证</span>
         </h1>
         <div class="sub">
             ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg) &nbsp;&nbsp; | &nbsp;&nbsp;
             ⚡ 导入文件格式：姓名,身份证号 (或空格分隔)
         </div>
 
-        <!-- 导入名单 & 搜索区域 -->
-        <div class="roster-section">
-            <div class="roster-header">
-                <button class="import-btn" id="importBtn">📂 导入姓名身份证</button>
-                <span class="file-name" id="fileNameDisplay">未选择文件</span>
-                <input type="file" id="importFile" accept=".txt,.csv" style="display: none;">
-            </div>
-            <div class="search-wrapper">
-                <input type="text" class="search-box" id="searchInput" placeholder="🔍 输入姓名或身份证号搜索..." autocomplete="off">
-                <div class="roster-results" id="rosterResults"></div>
-            </div>
-            <div class="roster-info" id="rosterInfo">尚未导入名单，请先导入。</div>
-        </div>
-
-        <!-- 编号 + 姓名 + 自动递增 (并排放置) -->
-        <div class="input-panel">
-            <div class="input-row">
-                <div class="input-field">
-                    <label>🔖 编号 <span style="font-weight:normal; color:#3b6f92;">(手动)</span></label>
-                    <input type="text" id="idNumber" placeholder="例如 102" value="">
+        <!-- 左右两列布局 -->
+        <div class="main-row">
+            <!-- 左侧：相机预览 -->
+            <div class="camera-left">
+                <div class="video-container">
+                    <video id="video" autoplay playsinline></video>
                 </div>
-                <div class="input-field">
-                    <label>🧑 姓名</label>
-                    <input type="text" id="fullName" placeholder="搜索或手动输入" value="">
+                <!-- 相机下方可以留空，或者放一点提示，但所有控件都在右侧 -->
+            </div>
+
+            <!-- 右侧：所有操作控件 -->
+            <div class="right-panel">
+                <!-- 导入名单 -->
+                <div class="roster-section">
+                    <div class="roster-header">
+                        <button class="import-btn" id="importBtn">📂 导入姓名身份证</button>
+                        <span class="file-name" id="fileNameDisplay">未选择文件</span>
+                        <input type="file" id="importFile" accept=".txt,.csv" style="display: none;">
+                    </div>
+                    <div class="search-wrapper">
+                        <input type="text" class="search-box" id="searchInput" placeholder="🔍 输入姓名或身份证号搜索..." autocomplete="off">
+                        <div class="roster-results" id="rosterResults"></div>
+                    </div>
+                    <div class="roster-info" id="rosterInfo">尚未导入名单，请先导入。</div>
                 </div>
-            </div>
-            <div class="auto-inc-wrapper">
-                <div class="checkbox-item">
-                    <input type="checkbox" id="autoIncrementCheckbox">
-                    <label for="autoIncrementCheckbox">🔁 自动递增编号</label>
+
+                <!-- 编号 + 姓名 + 自动递增 -->
+                <div class="input-panel">
+                    <div class="input-row">
+                        <div class="input-field">
+                            <label>🔖 编号 <span style="font-weight:normal; color:#3b6f92;">(手动)</span></label>
+                            <input type="text" id="idNumber" placeholder="例如 102" value="">
+                        </div>
+                        <div class="input-field">
+                            <label>🧑 姓名</label>
+                            <input type="text" id="fullName" placeholder="搜索或手动输入" value="">
+                        </div>
+                    </div>
+                    <div class="auto-inc-wrapper">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="autoIncrementCheckbox">
+                            <label for="autoIncrementCheckbox">🔁 自动递增编号</label>
+                        </div>
+                        <span class="hint-note">(仅数字)</span>
+                    </div>
                 </div>
-                <span class="hint-note">(仅数字)</span>
+
+                <!-- 类型选择面板 -->
+                <div class="type-section">
+                    <div class="type-header">
+                        <span>🔘 选择检查类型 (单击选中)</span>
+                    </div>
+                    <div class="type-grid" id="typeGrid"></div>
+                    <div class="custom-row">
+                        <input type="text" id="customTypeInput" placeholder="例如：骨密度 / 眼底照相" value="">
+                        <button id="addCustomBtn">➕ 添加自定义</button>
+                    </div>
+                    <div style="font-size:0.9rem; color:#1e6791; margin-top:12px;">点击自定义项即可切换选中</div>
+                </div>
+
+                <!-- 唯一拍照按钮 (放在右侧) -->
+                <button class="shoot-single" id="singleShootBtn">
+                    <span>📸</span> 拍 照 保 存 <span>🩻</span>
+                </button>
+
+                <!-- 文件名实时预览 -->
+                <div class="preview-bar">
+                    <span class="preview-label">📎 即将保存：</span>
+                    <span class="preview-filename" id="filenamePreview">101-李-抽血现场.jpg</span>
+                </div>
+
+                <!-- 状态 -->
+                <div id="statusMessage" class="status">✅ 选择类型，点击拍照</div>
             </div>
         </div>
 
-        <!-- 类型选择面板 - 在相机之前，PC上网格更密 -->
-        <div class="type-section">
-            <div class="type-header">
-                <span>🔘 选择检查类型 (单击选中)</span>
-            </div>
-            <div class="type-grid" id="typeGrid"></div>
-            <div class="custom-row">
-                <input type="text" id="customTypeInput" placeholder="例如：骨密度 / 眼底照相" value="">
-                <button id="addCustomBtn">➕ 添加自定义</button>
-            </div>
-            <div style="font-size:0.9rem; color:#1e6791; margin-top:12px;">点击自定义项即可切换选中</div>
-        </div>
-
-        <!-- 摄像头 + 拍照按钮 -->
-        <div class="camera-section">
-            <div class="video-container">
-                <video id="video" autoplay playsinline></video>
-            </div>
-            <button class="shoot-single" id="singleShootBtn">
-                <span>📸</span> 拍 照 保 存 <span>🩻</span>
-            </button>
-        </div>
-
-        <!-- 文件名实时预览 -->
-        <div class="preview-bar">
-            <span class="preview-label">📎 即将保存：</span>
-            <span class="preview-filename" id="filenamePreview">101-李-抽血现场.jpg</span>
-        </div>
-
-        <div id="statusMessage" class="status">✅ 选择类型，点击拍照</div>
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入 · PC宽屏优化
+            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入 · 相机左置
         </footer>
     </div>
 
@@ -603,7 +637,7 @@
             let customTypes = [];
 
             // 名单数据：存储姓名和身份证号
-            let roster = [];  // 格式: [{ name, idcard }]
+            let roster = [];
 
             // DOM 元素
             const video = document.getElementById('video');
