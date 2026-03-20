@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 完整画面预览</title>
+    <title>体检拍照 · 文档自动裁剪</title>
     <style>
         * {
             box-sizing: border-box;
@@ -81,7 +81,7 @@
         video {
             width: 100%;
             height: 100%;
-            object-fit: contain;   /* 完整显示，不裁剪 */
+            object-fit: contain;
             background: #102e3c;
             display: block;
         }
@@ -256,6 +256,24 @@
         .hint-note {
             color: #3f6f8f;
             font-size: 0.8rem;
+        }
+
+        /* 自动裁剪开关 */
+        .crop-option {
+            background: #eaf4fb;
+            border-radius: 60px;
+            padding: 6px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
+        .crop-option label {
+            font-weight: 600;
+            color: #0c4c6b;
+            font-size: 0.9rem;
+            cursor: pointer;
         }
 
         /* 拍照按钮 */
@@ -500,6 +518,13 @@
             .hint-note {
                 font-size: 0.7rem;
             }
+            .crop-option {
+                padding: 4px 12px;
+                gap: 8px;
+            }
+            .crop-option label {
+                font-size: 0.75rem;
+            }
             .shoot-single {
                 padding: 10px 8px;
                 font-size: 1.3rem;
@@ -583,7 +608,7 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">V1.8.0 - QUANMO</span>
+            <span class="badge">V1.8.0 · QUAN MO</span>
         </h1>
 
         <!-- 左右两列布局 -->
@@ -632,6 +657,12 @@
                     </div>
                 </div>
 
+                <!-- 自动裁剪开关 -->
+                <div class="crop-option">
+                    <input type="checkbox" id="autoCropCheckbox">
+                    <label for="autoCropCheckbox">✂️ 自动裁剪文档（检测边缘，去除背景）</label>
+                </div>
+
                 <!-- 拍照按钮 -->
                 <button class="shoot-single" id="singleShootBtn">
                     <span>📸</span> 拍照保存 <span>🩻</span>
@@ -658,9 +689,9 @@
                 <!-- 说明区域 -->
                 <div class="info-note">
                     <strong>📷 拍照命名：</strong> 编号-姓名-类型.png（姓名可选，留空则为 编号-类型.png）<br>
-                    <strong>📸 照片格式：</strong> PNG无损，自动适配手机最高分辨率<br>
-                    <strong>📂 导入文件格式：</strong> 姓名,身份证号（每行一个，姓名与身份证号用逗号或空格分隔）<br>
-                    <strong>🔍 使用提示：</strong> 点击搜索结果仅填充姓名，编号需手动填写
+                    <strong>📸 照片格式：</strong> PNG无损，自动适配最高分辨率<br>
+                    <strong>✂️ 自动裁剪：</strong> 开启后自动检测文档边界并裁剪，保留文档主体<br>
+                    <strong>📂 导入文件格式：</strong> 姓名,身份证号（每行一个）
                 </div>
 
                 <!-- 状态 -->
@@ -669,11 +700,12 @@
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 预览完整画面（不裁剪）· 高清PNG保存
+            ⚙️ 允许摄像头 · 预览完整画面 · 高清PNG · 可选自动裁剪文档
         </footer>
     </div>
 
     <canvas id="canvas" style="display: none;"></canvas>
+    <canvas id="cropCanvas" style="display: none;"></canvas>
 
     <script>
         (function() {
@@ -699,10 +731,13 @@
             // DOM
             const video = document.getElementById('video');
             const canvas = document.getElementById('canvas');
+            const cropCanvas = document.getElementById('cropCanvas');
             const ctx = canvas.getContext('2d');
+            const cropCtx = cropCanvas.getContext('2d');
             const idInput = document.getElementById('idNumber');
             const nameInput = document.getElementById('fullName');
             const autoIncCheck = document.getElementById('autoIncrementCheckbox');
+            const autoCropCheck = document.getElementById('autoCropCheckbox');
             const typeGrid = document.getElementById('typeGrid');
             const customInput = document.getElementById('customTypeInput');
             const addCustomBtn = document.getElementById('addCustomBtn');
@@ -773,14 +808,13 @@
                 statusDiv.innerText = `✅ 已添加：${newType}`;
             }
 
-            // 更新文件名预览 (PNG)
+            // 更新文件名预览
             function updatePreview() {
                 let id = idInput.value.trim() || '编号';
                 let name = nameInput.value.trim();
                 id = id.replace(/[\\/:*?"<>|]/g, '_');
                 name = name.replace(/[\\/:*?"<>|]/g, '_');
                 const typeSafe = currentType.replace(/[\\/:*?"<>|]/g, '_');
-
                 let preview;
                 if (name) {
                     preview = `${id}-${name}-${typeSafe}.png`;
@@ -809,8 +843,92 @@
                 updatePreview();
             }
 
-            // 拍照 - 使用 PNG 无损格式，并基于当前视频实际尺寸（最高分辨率）
-            function takePicture() {
+            // 自动裁剪算法：基于亮度投影，找到文档区域
+            function autoCrop(imageCanvas) {
+                const w = imageCanvas.width, h = imageCanvas.height;
+                const ctxSrc = imageCanvas.getContext('2d');
+                const imgData = ctxSrc.getImageData(0, 0, w, h);
+                const data = imgData.data;
+                
+                // 转为灰度并计算每行/每列的亮度平均值
+                const rowBrightness = new Array(h).fill(0);
+                const colBrightness = new Array(w).fill(0);
+                
+                for (let y = 0; y < h; y++) {
+                    let sum = 0;
+                    for (let x = 0; x < w; x++) {
+                        const idx = (y * w + x) * 4;
+                        const gray = 0.299 * data[idx] + 0.587 * data[idx+1] + 0.114 * data[idx+2];
+                        sum += gray;
+                        colBrightness[x] += gray;
+                    }
+                    rowBrightness[y] = sum / w;
+                }
+                for (let x = 0; x < w; x++) {
+                    colBrightness[x] /= h;
+                }
+                
+                // 找到亮度变化最大的区域（假设文档区域与背景有明显对比）
+                // 使用阈值分割：取整体平均亮度作为基准
+                const avgRow = rowBrightness.reduce((a,b)=>a+b,0)/h;
+                const avgCol = colBrightness.reduce((a,b)=>a+b,0)/w;
+                
+                // 寻找内容区域的边界：亮度偏离平均值的区域
+                const threshold = 30; // 亮度差异阈值
+                let top = 0, bottom = h-1, left = 0, right = w-1;
+                
+                // 从上往下找第一个亮度显著偏离的行
+                for (let y = 0; y < h; y++) {
+                    if (Math.abs(rowBrightness[y] - avgRow) > threshold) {
+                        top = y;
+                        break;
+                    }
+                }
+                // 从下往上
+                for (let y = h-1; y >= 0; y--) {
+                    if (Math.abs(rowBrightness[y] - avgRow) > threshold) {
+                        bottom = y;
+                        break;
+                    }
+                }
+                // 从左往右
+                for (let x = 0; x < w; x++) {
+                    if (Math.abs(colBrightness[x] - avgCol) > threshold) {
+                        left = x;
+                        break;
+                    }
+                }
+                // 从右往左
+                for (let x = w-1; x >= 0; x--) {
+                    if (Math.abs(colBrightness[x] - avgCol) > threshold) {
+                        right = x;
+                        break;
+                    }
+                }
+                
+                // 增加边距，避免裁掉内容
+                const margin = 10;
+                top = Math.max(0, top - margin);
+                left = Math.max(0, left - margin);
+                bottom = Math.min(h-1, bottom + margin);
+                right = Math.min(w-1, right + margin);
+                
+                // 如果裁剪区域过小或无效，返回原图
+                if (bottom - top < 10 || right - left < 10) {
+                    return null;
+                }
+                
+                // 创建裁剪后的canvas
+                const croppedCanvas = document.createElement('canvas');
+                croppedCanvas.width = right - left;
+                croppedCanvas.height = bottom - top;
+                const croppedCtx = croppedCanvas.getContext('2d');
+                croppedCtx.drawImage(imageCanvas, left, top, right-left, bottom-top, 0, 0, croppedCanvas.width, croppedCanvas.height);
+                return croppedCanvas;
+            }
+
+            // 拍照
+            async function takePicture() {
                 const id = idInput.value.trim();
                 if (!id) {
                     statusDiv.innerText = '⚠️ 编号不能为空';
@@ -825,7 +943,7 @@
                 let safeName = nameInput.value.trim().replace(/[\\/:*?"<>|]/g, '_');
                 const safeType = currentType.replace(/[\\/:*?"<>|]/g, '_');
 
-                // 使用视频当前实际分辨率
+                // 获取视频帧
                 const vw = video.videoWidth;
                 const vh = video.videoHeight;
                 if (vw && vh) {
@@ -836,17 +954,33 @@
                     canvas.height = videoHeight;
                 }
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-                // 文件名构造，扩展名 .png
+                
+                let finalCanvas = canvas;
+                let cropped = false;
+                
+                // 如果开启自动裁剪
+                if (autoCropCheck.checked) {
+                    statusDiv.innerText = '✂️ 正在自动裁剪文档...';
+                    const croppedResult = autoCrop(canvas);
+                    if (croppedResult) {
+                        finalCanvas = croppedResult;
+                        cropped = true;
+                        statusDiv.innerText = '✅ 文档裁剪完成';
+                    } else {
+                        statusDiv.innerText = '⚠️ 自动裁剪失败，保存原图';
+                    }
+                }
+                
+                // 文件名构造
                 let fileName;
                 if (safeName) {
                     fileName = `${safeId}-${safeName}-${safeType}.png`;
                 } else {
                     fileName = `${safeId}-${safeType}.png`;
                 }
-
-                // 使用 PNG 格式，无损
-                canvas.toBlob((blob) => {
+                
+                // 保存
+                finalCanvas.toBlob((blob) => {
                     if (blob) {
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
@@ -856,7 +990,11 @@
                         link.click();
                         document.body.removeChild(link);
                         URL.revokeObjectURL(url);
-                        statusDiv.innerText = `✅ 已保存（高清PNG）：${fileName}`;
+                        if (cropped) {
+                            statusDiv.innerText = `✅ 已保存（裁剪后）：${fileName}`;
+                        } else {
+                            statusDiv.innerText = `✅ 已保存：${fileName}`;
+                        }
                         incrementIdIfNeeded();
                         updatePreview();
                     } else {
@@ -946,7 +1084,7 @@
                 }
             });
 
-            // 初始化摄像头 - 请求最高可用分辨率
+            // 初始化摄像头
             async function initCamera() {
                 try {
                     const constraints = {
@@ -995,7 +1133,6 @@
                 if (e.key === 'Enter') addCustomType();
             });
 
-            // 节流
             let shooting = false;
             singleShootBtn.addEventListener('click', function(e) {
                 if (shooting) {
