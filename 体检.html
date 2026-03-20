@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 姓名可选项</title>
+    <title>体检拍照 · 无损PNG保存</title>
     <style>
         * {
             box-sizing: border-box;
@@ -578,10 +578,11 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">姓名可选</span>
+            <span class="badge">无损PNG保存</span>
         </h1>
         <div class="sub">
-            ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (姓名可选，如不填则为 <strong>编号-类型.jpg</strong>)<br>
+            ⚡ 拍照命名：<strong>编号-姓名-类型.png</strong> (姓名可选，如不填则为 <strong>编号-类型.png</strong>)<br>
+            ⚡ 照片格式：<strong>PNG无损压缩</strong>，不损失画质<br>
             ⚡ 导入文件格式：姓名,身份证号 (点击结果仅填充姓名)
         </div>
 
@@ -639,7 +640,7 @@
                 <!-- 文件名预览 -->
                 <div class="preview-bar">
                     <span class="preview-label">即将保存：</span>
-                    <span class="preview-filename" id="filenamePreview">101-抽血现场.jpg</span>
+                    <span class="preview-filename" id="filenamePreview">101-抽血现场.png</span>
                 </div>
 
                 <!-- 类型选择面板 -->
@@ -660,7 +661,7 @@
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 姓名可选，仅编号必填 · PC左置/手机中置
+            ⚙️ 允许摄像头 · 姓名可选，仅编号必填 · 保存为PNG无损格式
         </footer>
     </div>
 
@@ -764,7 +765,7 @@
                 statusDiv.innerText = `✅ 已添加：${newType}`;
             }
 
-            // 更新文件名预览 (姓名可选)
+            // 更新文件名预览 (PNG)
             function updatePreview() {
                 let id = idInput.value.trim() || '编号';
                 let name = nameInput.value.trim();
@@ -774,9 +775,9 @@
 
                 let preview;
                 if (name) {
-                    preview = `${id}-${name}-${typeSafe}.jpg`;
+                    preview = `${id}-${name}-${typeSafe}.png`;
                 } else {
-                    preview = `${id}-${typeSafe}.jpg`;
+                    preview = `${id}-${typeSafe}.png`;
                 }
                 filenamePreview.textContent = preview;
             }
@@ -800,7 +801,7 @@
                 updatePreview();
             }
 
-            // 拍照 (只检查编号)
+            // 拍照 - 使用 PNG 无损格式
             function takePicture() {
                 const id = idInput.value.trim();
                 if (!id) {
@@ -825,14 +826,15 @@
                 }
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // 根据姓名是否为空构造文件名
+                // 文件名构造，扩展名 .png
                 let fileName;
                 if (safeName) {
-                    fileName = `${safeId}-${safeName}-${safeType}.jpg`;
+                    fileName = `${safeId}-${safeName}-${safeType}.png`;
                 } else {
-                    fileName = `${safeId}-${safeType}.jpg`;
+                    fileName = `${safeId}-${safeType}.png`;
                 }
 
+                // 使用 PNG 格式，无损
                 canvas.toBlob((blob) => {
                     if (blob) {
                         const url = URL.createObjectURL(blob);
@@ -843,13 +845,13 @@
                         link.click();
                         document.body.removeChild(link);
                         URL.revokeObjectURL(url);
-                        statusDiv.innerText = `✅ 已保存：${fileName}`;
+                        statusDiv.innerText = `✅ 已保存（PNG无损）：${fileName}`;
                         incrementIdIfNeeded();
                         updatePreview();
                     } else {
                         statusDiv.innerText = '❌ 拍照失败';
                     }
-                }, 'image/jpeg', 0.92);
+                }, 'image/png');  // 关键：使用 PNG 格式，无质量参数（无损）
             }
 
             // 导入名单
