@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
@@ -36,7 +36,7 @@
         h1 {
             font-size: 1.8rem;
             font-weight: 650;
-            margin: 12px 0 12px 0;
+            margin: 12px 0 12px 0;   /* 修改：上下边距均为12px */
             color: #10455c;
             display: flex;
             align-items: center;
@@ -440,7 +440,7 @@
             h1 {
                 font-size: 1.3rem;
                 gap: 6px;
-                margin-bottom: 8px;
+                margin: 8px 0 10px;
             }
             .badge {
                 font-size: 0.6rem;
@@ -869,36 +869,31 @@
                 }
                 
                 // 找到亮度变化最大的区域（假设文档区域与背景有明显对比）
-                // 使用阈值分割：取整体平均亮度作为基准
                 const avgRow = rowBrightness.reduce((a,b)=>a+b,0)/h;
                 const avgCol = colBrightness.reduce((a,b)=>a+b,0)/w;
                 
                 // 寻找内容区域的边界：亮度偏离平均值的区域
-                const threshold = 30; // 亮度差异阈值
+                const threshold = 30;
                 let top = 0, bottom = h-1, left = 0, right = w-1;
                 
-                // 从上往下找第一个亮度显著偏离的行
                 for (let y = 0; y < h; y++) {
                     if (Math.abs(rowBrightness[y] - avgRow) > threshold) {
                         top = y;
                         break;
                     }
                 }
-                // 从下往上
                 for (let y = h-1; y >= 0; y--) {
                     if (Math.abs(rowBrightness[y] - avgRow) > threshold) {
                         bottom = y;
                         break;
                     }
                 }
-                // 从左往右
                 for (let x = 0; x < w; x++) {
                     if (Math.abs(colBrightness[x] - avgCol) > threshold) {
                         left = x;
                         break;
                     }
                 }
-                // 从右往左
                 for (let x = w-1; x >= 0; x--) {
                     if (Math.abs(colBrightness[x] - avgCol) > threshold) {
                         right = x;
@@ -906,19 +901,17 @@
                     }
                 }
                 
-                // 增加边距，避免裁掉内容
+                // 增加边距
                 const margin = 10;
                 top = Math.max(0, top - margin);
                 left = Math.max(0, left - margin);
                 bottom = Math.min(h-1, bottom + margin);
                 right = Math.min(w-1, right + margin);
                 
-                // 如果裁剪区域过小或无效，返回原图
                 if (bottom - top < 10 || right - left < 10) {
                     return null;
                 }
                 
-                // 创建裁剪后的canvas
                 const croppedCanvas = document.createElement('canvas');
                 croppedCanvas.width = right - left;
                 croppedCanvas.height = bottom - top;
@@ -943,7 +936,6 @@
                 let safeName = nameInput.value.trim().replace(/[\\/:*?"<>|]/g, '_');
                 const safeType = currentType.replace(/[\\/:*?"<>|]/g, '_');
 
-                // 获取视频帧
                 const vw = video.videoWidth;
                 const vh = video.videoHeight;
                 if (vw && vh) {
@@ -958,7 +950,6 @@
                 let finalCanvas = canvas;
                 let cropped = false;
                 
-                // 如果开启自动裁剪
                 if (autoCropCheck.checked) {
                     statusDiv.innerText = '✂️ 正在自动裁剪文档...';
                     const croppedResult = autoCrop(canvas);
@@ -971,7 +962,6 @@
                     }
                 }
                 
-                // 文件名构造
                 let fileName;
                 if (safeName) {
                     fileName = `${safeId}-${safeName}-${safeType}.png`;
@@ -979,7 +969,6 @@
                     fileName = `${safeId}-${safeType}.png`;
                 }
                 
-                // 保存
                 finalCanvas.toBlob((blob) => {
                     if (blob) {
                         const url = URL.createObjectURL(blob);
