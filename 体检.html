@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 全屏紧凑版</title>
+    <title>体检拍照 · 姓名可选项</title>
     <style>
         * {
             box-sizing: border-box;
@@ -314,7 +314,7 @@
             word-break: break-all;
         }
 
-        /* 类型选择面板 (现在位于预览之后) */
+        /* 类型选择面板 */
         .type-section {
             background: #f2f9ff;
             border-radius: 24px;
@@ -515,7 +515,6 @@
                 padding: 4px 14px;
                 font-size: 0.8rem;
             }
-            /* 类型面板在手机上的样式 */
             .type-section {
                 padding: 10px 10px;
             }
@@ -579,11 +578,11 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">类型移后 · 全屏紧凑</span>
+            <span class="badge">姓名可选</span>
         </h1>
         <div class="sub">
-            ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg) &nbsp;&nbsp; | &nbsp;&nbsp;
-            ⚡ 导入文件格式：姓名,身份证号
+            ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (姓名可选，如不填则为 <strong>编号-类型.jpg</strong>)<br>
+            ⚡ 导入文件格式：姓名,身份证号 (点击结果仅填充姓名)
         </div>
 
         <!-- 左右两列布局 -->
@@ -595,7 +594,7 @@
                 </div>
             </div>
 
-            <!-- 右侧：所有操作控件 (调整后顺序) -->
+            <!-- 右侧：所有操作控件 -->
             <div class="right-panel">
                 <!-- 导入名单 -->
                 <div class="roster-section">
@@ -615,12 +614,12 @@
                 <div class="input-panel">
                     <div class="input-row">
                         <div class="input-field">
-                            <label>🔖 编号 <span style="font-weight:normal;">(手动)</span></label>
+                            <label>🔖 编号 <span style="font-weight:normal;">(必填)</span></label>
                             <input type="text" id="idNumber" placeholder="例 102" value="">
                         </div>
                         <div class="input-field">
-                            <label>🧑 姓名</label>
-                            <input type="text" id="fullName" placeholder="搜索或输入" value="">
+                            <label>🧑 姓名 <span style="font-weight:normal;">(可选)</span></label>
+                            <input type="text" id="fullName" placeholder="搜索或留空" value="">
                         </div>
                     </div>
                     <div class="auto-inc-wrapper">
@@ -640,10 +639,10 @@
                 <!-- 文件名预览 -->
                 <div class="preview-bar">
                     <span class="preview-label">即将保存：</span>
-                    <span class="preview-filename" id="filenamePreview">101-李-抽血现场.jpg</span>
+                    <span class="preview-filename" id="filenamePreview">101-抽血现场.jpg</span>
                 </div>
 
-                <!-- 类型选择面板 (移至预览之后) -->
+                <!-- 类型选择面板 -->
                 <div class="type-section">
                     <div class="type-header">
                         <span>🔘 检查类型</span>
@@ -661,7 +660,7 @@
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · PC左置/手机中置 · 类型面板移后
+            ⚙️ 允许摄像头 · 姓名可选，仅编号必填 · PC左置/手机中置
         </footer>
     </div>
 
@@ -765,17 +764,24 @@
                 statusDiv.innerText = `✅ 已添加：${newType}`;
             }
 
-            // 更新预览
+            // 更新文件名预览 (姓名可选)
             function updatePreview() {
                 let id = idInput.value.trim() || '编号';
-                let name = nameInput.value.trim() || '姓名';
+                let name = nameInput.value.trim();
                 id = id.replace(/[\\/:*?"<>|]/g, '_');
                 name = name.replace(/[\\/:*?"<>|]/g, '_');
                 const typeSafe = currentType.replace(/[\\/:*?"<>|]/g, '_');
-                filenamePreview.textContent = `${id}-${name}-${typeSafe}.jpg`;
+
+                let preview;
+                if (name) {
+                    preview = `${id}-${name}-${typeSafe}.jpg`;
+                } else {
+                    preview = `${id}-${typeSafe}.jpg`;
+                }
+                filenamePreview.textContent = preview;
             }
 
-            // 自动递增
+            // 编号自动递增
             function incrementIdIfNeeded() {
                 if (!autoIncCheck.checked) return;
                 let idVal = idInput.value.trim();
@@ -794,20 +800,20 @@
                 updatePreview();
             }
 
-            // 拍照
+            // 拍照 (只检查编号)
             function takePicture() {
                 const id = idInput.value.trim();
-                const name = nameInput.value.trim();
-                if (!id || !name) {
-                    statusDiv.innerText = '⚠️ 填写编号和姓名';
+                if (!id) {
+                    statusDiv.innerText = '⚠️ 编号不能为空';
                     return;
                 }
                 let safeId = id.replace(/[\\/:*?"<>|]/g, '_');
-                let safeName = name.replace(/[\\/:*?"<>|]/g, '_');
-                if (!safeId || !safeName) {
-                    statusDiv.innerText = '❌ 非法字符';
+                if (!safeId) {
+                    statusDiv.innerText = '❌ 编号含有非法字符';
                     return;
                 }
+
+                let safeName = nameInput.value.trim().replace(/[\\/:*?"<>|]/g, '_');
                 const safeType = currentType.replace(/[\\/:*?"<>|]/g, '_');
 
                 if (video.videoWidth && video.videoHeight) {
@@ -819,7 +825,13 @@
                 }
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                const fileName = `${safeId}-${safeName}-${safeType}.jpg`;
+                // 根据姓名是否为空构造文件名
+                let fileName;
+                if (safeName) {
+                    fileName = `${safeId}-${safeName}-${safeType}.jpg`;
+                } else {
+                    fileName = `${safeId}-${safeType}.jpg`;
+                }
 
                 canvas.toBlob((blob) => {
                     if (blob) {
