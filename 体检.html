@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 手机优化版</title>
+    <title>体检拍照 · 类型在上 相机在下</title>
     <style>
         * {
             box-sizing: border-box;
@@ -202,23 +202,7 @@
             font-size: 0.85rem;
         }
 
-        .video-container {
-            background: #102e3c;
-            border-radius: 24px;
-            overflow: hidden;
-            margin: 8px 0 16px;
-            aspect-ratio: 4/3;
-            border: 3px solid white;
-            box-shadow: 0 12px 20px -8px #0d3647;
-        }
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-            background: #264653;
-        }
-
+        /* 类型选择面板 - 现在放在相机上方 */
         .type-section {
             background: #f2f9ff;
             border-radius: 24px;
@@ -294,6 +278,24 @@
             cursor: pointer;
             border: 1px solid #91c7e6;
         }
+
+        .video-container {
+            background: #102e3c;
+            border-radius: 24px;
+            overflow: hidden;
+            margin: 8px 0 16px;
+            aspect-ratio: 4/3;
+            border: 3px solid white;
+            box-shadow: 0 12px 20px -8px #0d3647;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #264653;
+        }
+
         .shoot-single {
             background: linear-gradient(145deg, #176d8f, #0a4b68);
             border: none;
@@ -358,7 +360,7 @@
             padding-top: 14px;
         }
 
-        /* ---------- 手机专用优化 (max-width: 600px) ---------- */
+        /* 手机专用优化 */
         @media (max-width: 600px) {
             .card {
                 padding: 16px 14px 20px;
@@ -408,7 +410,7 @@
                 font-size: 0.9rem;
             }
             .type-grid {
-                grid-template-columns: repeat(2, 1fr); /* 手机上强制2列，更易点按 */
+                grid-template-columns: repeat(2, 1fr);
                 gap: 8px;
             }
             .type-btn {
@@ -443,7 +445,6 @@
             }
         }
 
-        /* 更小屏幕 (max-width: 380px) 再微调 */
         @media (max-width: 380px) {
             .type-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -502,12 +503,7 @@
             <span class="hint-note">(仅数字编号有效)</span>
         </div>
 
-        <!-- 摄像头 -->
-        <div class="video-container">
-            <video id="video" autoplay playsinline></video>
-        </div>
-
-        <!-- 类型选择面板 -->
+        <!-- 类型选择面板 - 现在位于相机之前 -->
         <div class="type-section">
             <div class="type-header">
                 <span>🔘 选择检查类型 (单击选中)</span>
@@ -518,6 +514,11 @@
                 <button id="addCustomBtn">➕ 添加</button>
             </div>
             <div style="font-size:0.8rem; color:#1e6791; margin-top:8px;">点击自定义项即可切换选中</div>
+        </div>
+
+        <!-- 摄像头 -->
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
         </div>
 
         <!-- 唯一拍照按钮 -->
