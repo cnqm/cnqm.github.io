@@ -23,18 +23,18 @@
         .card {
             max-width: 1600px;
             width: 100%;
-            max-height: 98vh;           /* 限制最大高度，防止溢出 */
+            max-height: 98vh;
             background: white;
             border-radius: 32px;
             box-shadow: 0 30px 50px -20px rgba(0,40,70,0.3);
-            padding: 16px 20px 18px;     /* 整体内边距减小 */
+            padding: 16px 20px 18px;
             border: 1px solid rgba(255,255,255,0.7);
             display: flex;
             flex-direction: column;
-            overflow-y: auto;            /* 如果内容过多则滚动，但已优化 */
+            overflow-y: auto;
         }
         h1 {
-            font-size: 1.8rem;           /* 标题缩小 */
+            font-size: 1.8rem;
             font-weight: 650;
             margin: 0 0 4px 0;
             color: #10455c;
@@ -55,7 +55,7 @@
             background: #dcf0fa;
             border-radius: 24px;
             padding: 8px 16px;
-            margin-bottom: 12px;          /* 底部间距减小 */
+            margin-bottom: 12px;
             color: #144e6b;
             font-weight: 500;
             border-left: 6px solid #3080b0;
@@ -66,9 +66,9 @@
         /* 左右布局容器 */
         .main-row {
             display: flex;
-            gap: 20px;                    /* 间隙缩小 */
+            gap: 20px;
             flex: 1;
-            min-height: 0;                 /* flex限制溢出 */
+            min-height: 0;
         }
         /* 左侧相机区域 */
         .camera-left {
@@ -99,9 +99,9 @@
             flex: 2 1 450px;
             display: flex;
             flex-direction: column;
-            gap: 12px;                    /* 模块间距减小 */
+            gap: 12px;
             min-width: 360px;
-            overflow-y: auto;              /* 必要时滚动，但已优化 */
+            overflow-y: auto;
             padding-right: 2px;
         }
 
@@ -109,7 +109,7 @@
         .roster-section {
             background: #ecf5fc;
             border-radius: 24px;
-            padding: 12px 16px;            /* 内边距减小 */
+            padding: 12px 16px;
             border: 1px solid #c1ddef;
         }
         .roster-header {
@@ -123,7 +123,7 @@
             background: #3080b0;
             border: none;
             color: white;
-            padding: 8px 20px;              /* 缩小 */
+            padding: 8px 20px;
             border-radius: 60px;
             font-weight: 600;
             font-size: 0.9rem;
@@ -152,7 +152,7 @@
         }
         .search-box {
             width: 100%;
-            padding: 8px 16px;              /* 缩小 */
+            padding: 8px 16px;
             border: 2px solid #b7d3e8;
             border-radius: 60px;
             font-size: 0.9rem;
@@ -208,7 +208,7 @@
             gap: 12px;
             align-items: center;
             background: #f7fafd;
-            padding: 10px 14px;            /* 内边距减小 */
+            padding: 10px 14px;
             border-radius: 24px;
         }
         .input-row {
@@ -229,7 +229,7 @@
         }
         .input-field input {
             width: 100%;
-            padding: 8px 14px;              /* 缩小 */
+            padding: 8px 14px;
             border: 2px solid #c7ddec;
             border-radius: 40px;
             font-size: 0.9rem;
@@ -266,11 +266,59 @@
             font-size: 0.8rem;
         }
 
-        /* 类型选择面板 */
+        /* 拍照按钮 */
+        .shoot-single {
+            background: linear-gradient(145deg, #176d8f, #0a4b68);
+            border: none;
+            width: 100%;
+            padding: 12px 10px;
+            border-radius: 50px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            box-shadow: 0 12px 18px -8px #0a4055;
+            cursor: pointer;
+            border: 2px solid rgba(255,255,255,0.3);
+            margin-top: 4px;
+        }
+
+        /* 文件名预览 */
+        .preview-bar {
+            background: #e2f0f9;
+            border-radius: 50px;
+            padding: 10px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border: 1px solid #b3d5ed;
+        }
+        .preview-label {
+            font-weight: 600;
+            color: #165a79;
+            font-size: 0.9rem;
+        }
+        .preview-filename {
+            background: #10455e;
+            color: white;
+            padding: 6px 20px;
+            border-radius: 60px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 1rem;
+            letter-spacing: 0.3px;
+            word-break: break-all;
+        }
+
+        /* 类型选择面板 (现在位于预览之后) */
         .type-section {
             background: #f2f9ff;
             border-radius: 24px;
-            padding: 14px 16px;            /* 内边距减小 */
+            padding: 14px 16px;
         }
         .type-header {
             font-weight: 650;
@@ -340,52 +388,6 @@
             cursor: pointer;
         }
 
-        /* 拍照按钮 */
-        .shoot-single {
-            background: linear-gradient(145deg, #176d8f, #0a4b68);
-            border: none;
-            width: 100%;
-            padding: 12px 10px;            /* 高度减小 */
-            border-radius: 50px;
-            font-size: 1.5rem;              /* 缩小 */
-            font-weight: 700;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            box-shadow: 0 12px 18px -8px #0a4055;
-            cursor: pointer;
-            border: 2px solid rgba(255,255,255,0.3);
-            margin-top: 4px;
-        }
-
-        .preview-bar {
-            background: #e2f0f9;
-            border-radius: 50px;
-            padding: 10px 18px;            /* 缩小 */
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-            border: 1px solid #b3d5ed;
-        }
-        .preview-label {
-            font-weight: 600;
-            color: #165a79;
-            font-size: 0.9rem;
-        }
-        .preview-filename {
-            background: #10455e;
-            color: white;
-            padding: 6px 20px;
-            border-radius: 60px;
-            font-family: 'Courier New', monospace;
-            font-weight: 600;
-            font-size: 1rem;
-            letter-spacing: 0.3px;
-            word-break: break-all;
-        }
         .status {
             text-align: center;
             color: #186585;
@@ -402,7 +404,7 @@
             padding-top: 10px;
         }
 
-        /* ---------- 手机优化 (超紧凑，相机自然居中) ---------- */
+        /* ---------- 手机优化 ---------- */
         @media (max-width: 900px) {
             body {
                 padding: 4px;
@@ -426,7 +428,7 @@
                 border-left-width: 4px;
             }
             .main-row {
-                flex-direction: column;      /* 上下排列 */
+                flex-direction: column;
                 gap: 12px;
             }
             .camera-left {
@@ -497,6 +499,23 @@
             .hint-note {
                 font-size: 0.7rem;
             }
+            .shoot-single {
+                padding: 10px 8px;
+                font-size: 1.3rem;
+                gap: 8px;
+            }
+            .preview-bar {
+                padding: 8px 14px;
+                gap: 8px;
+            }
+            .preview-label {
+                font-size: 0.75rem;
+            }
+            .preview-filename {
+                padding: 4px 14px;
+                font-size: 0.8rem;
+            }
+            /* 类型面板在手机上的样式 */
             .type-section {
                 padding: 10px 10px;
             }
@@ -505,7 +524,7 @@
                 margin-bottom: 6px;
             }
             .type-grid {
-                grid-template-columns: repeat(5, 1fr);  /* 保持5列 */
+                grid-template-columns: repeat(5, 1fr);
                 gap: 4px;
                 margin-bottom: 8px;
             }
@@ -526,22 +545,6 @@
                 padding: 6px 14px;
                 font-size: 0.75rem;
             }
-            .shoot-single {
-                padding: 10px 8px;
-                font-size: 1.3rem;
-                gap: 8px;
-            }
-            .preview-bar {
-                padding: 8px 14px;
-                gap: 8px;
-            }
-            .preview-label {
-                font-size: 0.75rem;
-            }
-            .preview-filename {
-                padding: 4px 14px;
-                font-size: 0.8rem;
-            }
             .status {
                 font-size: 0.75rem;
             }
@@ -552,7 +555,6 @@
             }
         }
 
-        /* 极小屏额外处理 */
         @media (max-width: 380px) {
             .type-grid {
                 gap: 2px;
@@ -577,7 +579,7 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">全屏紧凑版</span>
+            <span class="badge">类型移后 · 全屏紧凑</span>
         </h1>
         <div class="sub">
             ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg) &nbsp;&nbsp; | &nbsp;&nbsp;
@@ -593,7 +595,7 @@
                 </div>
             </div>
 
-            <!-- 右侧：所有操作控件 -->
+            <!-- 右侧：所有操作控件 (调整后顺序) -->
             <div class="right-panel">
                 <!-- 导入名单 -->
                 <div class="roster-section">
@@ -630,18 +632,6 @@
                     </div>
                 </div>
 
-                <!-- 类型选择面板 -->
-                <div class="type-section">
-                    <div class="type-header">
-                        <span>🔘 检查类型</span>
-                    </div>
-                    <div class="type-grid" id="typeGrid"></div>
-                    <div class="custom-row">
-                        <input type="text" id="customTypeInput" placeholder="例 骨密度" value="">
-                        <button id="addCustomBtn">➕ 添加</button>
-                    </div>
-                </div>
-
                 <!-- 拍照按钮 -->
                 <button class="shoot-single" id="singleShootBtn">
                     <span>📸</span> 拍照保存 <span>🩻</span>
@@ -653,13 +643,25 @@
                     <span class="preview-filename" id="filenamePreview">101-李-抽血现场.jpg</span>
                 </div>
 
+                <!-- 类型选择面板 (移至预览之后) -->
+                <div class="type-section">
+                    <div class="type-header">
+                        <span>🔘 检查类型</span>
+                    </div>
+                    <div class="type-grid" id="typeGrid"></div>
+                    <div class="custom-row">
+                        <input type="text" id="customTypeInput" placeholder="例 骨密度" value="">
+                        <button id="addCustomBtn">➕ 添加</button>
+                    </div>
+                </div>
+
                 <!-- 状态 -->
                 <div id="statusMessage" class="status">✅ 选择类型，点击拍照</div>
             </div>
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · PC左置/手机中置 · 全屏紧凑设计
+            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · PC左置/手机中置 · 类型面板移后
         </footer>
     </div>
 
