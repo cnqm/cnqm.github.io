@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>体检拍照 · 按钮输入框缩小</title>
+    <title>体检拍照 · 手机优化版</title>
     <style>
         * {
             box-sizing: border-box;
@@ -16,7 +16,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 16px;
+            padding: 8px;
         }
         .card {
             max-width: 1600px;
@@ -113,7 +113,7 @@
             background: #3080b0;
             border: none;
             color: white;
-            padding: 12px 28px;          /* 稍微缩小 */
+            padding: 12px 28px;
             border-radius: 60px;
             font-weight: 600;
             font-size: 1rem;
@@ -146,7 +146,7 @@
         }
         .search-box {
             width: 100%;
-            padding: 12px 20px;           /* 缩小 */
+            padding: 12px 20px;
             border: 2px solid #b7d3e8;
             border-radius: 60px;
             font-size: 1rem;
@@ -231,7 +231,7 @@
         }
         .input-field input {
             width: 100%;
-            padding: 12px 16px;           /* 缩小 */
+            padding: 12px 16px;
             border: 2px solid #c7ddec;
             border-radius: 50px;
             font-size: 1rem;
@@ -291,16 +291,16 @@
         }
         .type-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* 缩小最小宽度 */
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 12px;
             margin-bottom: 18px;
         }
         .type-btn {
             background: white;
             border: 2px solid #c0d9eb;
-            border-radius: 40px;           /* 稍微减小圆角 */
-            padding: 10px 6px;              /* 缩小内边距 */
-            font-size: 0.95rem;              /* 缩小字体 */
+            border-radius: 40px;
+            padding: 10px 6px;
+            font-size: 0.95rem;
             font-weight: 600;
             color: #154a64;
             display: flex;
@@ -321,7 +321,7 @@
             box-shadow: 0 4px 10px rgba(20,110,150,0.3);
         }
         .type-btn .emoji {
-            font-size: 1.2rem;              /* 缩小表情 */
+            font-size: 1.2rem;
         }
         .custom-row {
             display: flex;
@@ -332,7 +332,7 @@
         }
         .custom-row input {
             flex: 2 1 280px;
-            padding: 12px 20px;             /* 缩小 */
+            padding: 12px 20px;
             border: 2px solid #b7d3e8;
             border-radius: 60px;
             font-size: 1rem;
@@ -342,7 +342,7 @@
             background: #1b6990;
             border: none;
             color: white;
-            padding: 12px 26px;              /* 缩小 */
+            padding: 12px 26px;
             border-radius: 60px;
             font-weight: 600;
             font-size: 1rem;
@@ -358,14 +358,14 @@
             background: #0f5a80;
         }
 
-        /* 拍照按钮 (在右侧) */
+        /* 拍照按钮 */
         .shoot-single {
             background: linear-gradient(145deg, #176d8f, #0a4b68);
             border: none;
             width: 100%;
-            padding: 16px 12px;              /* 缩小高度 */
+            padding: 16px 12px;
             border-radius: 60px;
-            font-size: 1.8rem;                /* 缩小字体 */
+            font-size: 1.8rem;
             font-weight: 700;
             color: white;
             display: flex;
@@ -389,7 +389,7 @@
         .preview-bar {
             background: #e2f0f9;
             border-radius: 60px;
-            padding: 14px 24px;              /* 缩小 */
+            padding: 14px 24px;
             display: flex;
             align-items: center;
             gap: 16px;
@@ -404,11 +404,11 @@
         .preview-filename {
             background: #10455e;
             color: white;
-            padding: 8px 26px;                /* 缩小 */
+            padding: 8px 26px;
             border-radius: 60px;
             font-family: 'Courier New', monospace;
             font-weight: 600;
-            font-size: 1.2rem;                 /* 缩小 */
+            font-size: 1.2rem;
             letter-spacing: 0.5px;
             word-break: break-all;
         }
@@ -427,111 +427,181 @@
             padding-top: 18px;
         }
 
-        /* 手机适配：保持原有紧凑样式 */
+        /* ---------- 手机优化 (适配主流手机) ---------- */
         @media (max-width: 900px) {
             .main-row {
                 flex-direction: column;
             }
             .camera-left {
                 width: 100%;
+                min-width: auto;
             }
             .right-panel {
                 width: 100%;
                 min-width: auto;
             }
             .card {
-                padding: 20px 18px 24px;
+                padding: 16px 14px 20px;
+                border-radius: 24px;
             }
+            /* 缩小标题 */
             h1 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
             .badge {
-                font-size: 0.8rem;
-                padding: 4px 12px;
+                font-size: 0.7rem;
+                padding: 4px 10px;
             }
             .sub {
-                font-size: 0.95rem;
-                padding: 12px 16px;
+                font-size: 0.85rem;
+                padding: 10px 14px;
+                margin-bottom: 16px;
             }
+            /* 缩小导入区域 */
             .roster-section {
-                padding: 14px 14px;
+                padding: 12px 12px;
             }
             .import-btn {
-                padding: 10px 20px;
-                font-size: 0.95rem;
-            }
-            .file-name {
-                max-width: 180px;
+                padding: 8px 16px;
                 font-size: 0.85rem;
             }
+            .file-name {
+                font-size: 0.8rem;
+                padding: 4px 12px;
+                max-width: 150px;
+            }
             .search-box {
-                padding: 12px 16px;
-                font-size: 0.95rem;
+                padding: 8px 14px;
+                font-size: 0.85rem;
             }
             .roster-item {
-                padding: 10px 14px;
-                font-size: 0.95rem;
+                padding: 8px 12px;
+                font-size: 0.85rem;
             }
             .roster-item .roster-name {
-                min-width: 90px;
+                min-width: 80px;
             }
+            .roster-info {
+                font-size: 0.8rem;
+            }
+            /* 输入面板缩小 */
             .input-panel {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 14px 16px;
+                padding: 10px 12px;
+                gap: 12px;
+            }
+            .input-field label {
+                font-size: 0.85rem;
+                margin-bottom: 4px;
             }
             .input-field input {
-                padding: 12px 14px;
-                font-size: 1rem;
-            }
-            .auto-inc-wrapper {
-                width: 100%;
-                justify-content: space-between;
-                padding: 8px 16px;
-            }
-            .type-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-            }
-            .type-btn {
-                padding: 10px 4px;
+                padding: 8px 12px;
                 font-size: 0.9rem;
             }
+            .auto-inc-wrapper {
+                padding: 6px 14px;
+                gap: 8px;
+            }
+            .checkbox-item input[type="checkbox"] {
+                width: 18px;
+                height: 18px;
+            }
+            .checkbox-item label {
+                font-size: 0.85rem;
+            }
+            .hint-note {
+                font-size: 0.8rem;
+            }
+            /* 类型区域：每行五个按钮 */
+            .type-section {
+                padding: 14px 12px;
+            }
+            .type-header {
+                font-size: 1rem;
+                margin-bottom: 12px;
+            }
+            .type-grid {
+                grid-template-columns: repeat(5, 1fr);  /* 五个按钮一行 */
+                gap: 6px;
+                margin-bottom: 12px;
+            }
+            .type-btn {
+                padding: 6px 2px;
+                font-size: 0.7rem;
+                border-radius: 30px;
+                gap: 2px;
+            }
             .type-btn .emoji {
-                font-size: 1.2rem;
+                font-size: 1rem;
             }
             .custom-row input {
-                padding: 12px 16px;
-                font-size: 0.95rem;
+                padding: 8px 14px;
+                font-size: 0.85rem;
+                flex: 2 1 200px;
             }
             .custom-row button {
-                padding: 12px 22px;
-                font-size: 1rem;
+                padding: 8px 16px;
+                font-size: 0.85rem;
             }
+            /* 拍照按钮 */
             .shoot-single {
-                font-size: 1.6rem;
-                padding: 16px 12px;
+                font-size: 1.4rem;
+                padding: 12px 10px;
+                border-radius: 50px;
+                gap: 10px;
             }
             .preview-bar {
-                padding: 12px 18px;
+                padding: 10px 16px;
+                gap: 10px;
+            }
+            .preview-label {
+                font-size: 0.85rem;
             }
             .preview-filename {
-                font-size: 1rem;
-                padding: 6px 20px;
+                padding: 5px 16px;
+                font-size: 0.95rem;
+            }
+            .status {
+                font-size: 0.85rem;
+            }
+            footer {
+                font-size: 0.75rem;
+                margin-top: 16px;
+                padding-top: 12px;
             }
         }
 
+        /* 超小屏幕 (例如宽度小于400px) 进一步微调 */
         @media (max-width: 480px) {
             .type-grid {
-                grid-template-columns: repeat(2, 1fr);
+                grid-template-columns: repeat(5, 1fr);
+                gap: 4px;
+            }
+            .type-btn {
+                font-size: 0.65rem;
+                padding: 4px 1px;
+            }
+            .type-btn .emoji {
+                font-size: 0.9rem;
             }
             .roster-header {
                 flex-direction: column;
                 align-items: flex-start;
+                gap: 8px;
             }
             .file-name {
                 max-width: 100%;
                 width: 100%;
+            }
+            .input-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .input-field {
+                width: 100%;
+            }
+            .auto-inc-wrapper {
+                width: 100%;
+                justify-content: space-between;
             }
         }
     </style>
@@ -540,7 +610,7 @@
     <div class="card">
         <h1>
             📋 体检拍照器
-            <span class="badge">按钮输入框缩小 · 相机左置</span>
+            <span class="badge">手机优化版</span>
         </h1>
         <div class="sub">
             ⚡ 拍照命名： <strong>编号-姓名-类型.jpg</strong>  (例：101-张-抽血现场.jpg) &nbsp;&nbsp; | &nbsp;&nbsp;
@@ -603,7 +673,7 @@
                         <input type="text" id="customTypeInput" placeholder="例如：骨密度 / 眼底照相" value="">
                         <button id="addCustomBtn">➕ 添加自定义</button>
                     </div>
-                    <div style="font-size:0.85rem; color:#1e6791; margin-top:10px;">点击自定义项即可切换选中</div>
+                    <div style="font-size:0.75rem; color:#1e6791; margin-top:8px;">点击自定义项即可切换选中</div>
                 </div>
 
                 <!-- 唯一拍照按钮 -->
@@ -623,7 +693,7 @@
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入 · 按钮及输入框已缩小
+            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 编号手动输入 · 手机优化
         </footer>
     </div>
 
