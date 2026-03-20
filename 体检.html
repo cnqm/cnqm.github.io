@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>体检拍照 · 导入姓名身份证</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        body {
+            background: #eef2f7;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+        .card {
+            max-width: 750px;
+            width: 100%;
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 25px 45px -12px rgba(0,40,70,0.25);
+            padding: 26px 24px 32px;
+            border: 1px solid rgba(255,255,255,0.7);
+        }
+        h1 {
+            font-size: 2rem;
+            font-weight: 650;
+            margin: 0 0 6px 0;
+            color: #10455c;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            background: #c2e2f2;
+            font-size: 0.9rem;
+            padding: 6px 18px;
+            border-radius: 50px;
+            color: #0e4c6b;
+            font-weight: 500;
+        }
+        .sub {
+            background: #dcf0fa;
+            border-radius: 30px;
+            padding: 12px 20px;
+            margin-bottom: 18px;
+            color: #144e6b;
+            font-weight: 500;
+            border-left: 6px solid #3080b0;
+        }
+        /* 导入名单区域 */
+        .roster-section {
+            background: #ecf5fc;
+            border-radius: 30px;
+            padding: 16px 18px;
+            margin-bottom: 20px;
+            border: 1px solid #c1ddef;
+        }
+        .roster-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .import-btn {
+            background: #3080b0;
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,80,120,0.2);
+            border: 1px solid #9ac9e6;
+        }
+        .file-name {
+            color: #1d6285;
+            font-size: 0.95rem;
+            background: white;
+            padding: 8px 18px;
+            border-radius: 40px;
+            border: 1px solid #b3d3ea;
+        }
+        .search-box {
+            width: 100%;
+            padding: 14px 20px;
+            border: 2px solid #b7d3e8;
+            border-radius: 60px;
+            font-size: 1rem;
+            background: white;
+            margin: 12px 0 8px;
+        }
+        .search-box:focus {
+            border-color: #2079b0;
+            outline: none;
+        }
+        .roster-results {
+            max-height: 160px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 24px;
+            padding: 8px 6px;
+            border: 1px solid #c3daef;
+            display: none;
+        }
+        .roster-results.show {
+            display: block;
+        }
+        .roster-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2edf7;
+            cursor: pointer;
+            display: flex;
+            gap: 15px;
+            font-size: 1.05rem;
+        }
+        .roster-item:hover {
+            background: #d9ebf9;
+        }
+        .roster-item .roster-name {
+            font-weight: 600;
+            color: #0f5275;
+            min-width: 100px;
+        }
+        .roster-item .roster-idcard {
+            color: #1b4055;
+            font-family: monospace;
+        }
+        .roster-info {
+            color: #2f6c93;
+            font-size: 0.9rem;
+            margin: 8px 0 0;
+        }
+
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .input-field {
+            flex: 1 1 200px;
+        }
+        .input-field label {
+            display: block;
+            font-weight: 600;
+            color: #124f6e;
+            margin-bottom: 5px;
+            font-size: 0.95rem;
+        }
+        .input-field input {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #c7ddec;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            background: white;
+            transition: 0.2s;
+        }
+        .input-field input:focus {
+            border-color: #2079b0;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(32,121,176,0.2);
+        }
+        .auto-inc-row {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 5px 0 15px 5px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #eaf4fb;
+            padding: 8px 20px;
+            border-radius: 40px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            accent-color: #1b7aa6;
+            margin: 0;
+        }
+        .checkbox-item label {
+            font-weight: 600;
+            color: #0c4c6b;
+            font-size: 1.05rem;
+        }
+        .hint-note {
+            color: #3f6f8f;
+            font-size: 0.9rem;
+        }
+
+        .video-container {
+            background: #102e3c;
+            border-radius: 28px;
+            overflow: hidden;
+            margin: 8px 0 18px;
+            aspect-ratio: 4/3;
+            border: 4px solid white;
+            box-shadow: 0 16px 28px -8px #0d3647;
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: #264653;
+        }
+
+        .type-section {
+            background: #f2f9ff;
+            border-radius: 32px;
+            padding: 18px 16px 16px;
+            margin: 10px 0 20px;
+        }
+        .type-header {
+            font-weight: 650;
+            color: #0a4a64;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .type-btn {
+            background: white;
+            border: 2px solid #c0d9eb;
+            border-radius: 60px;
+            padding: 12px 5px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #154a64;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: 0.1s;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .type-btn.active {
+            background: #1c7aa6;
+            border-color: #0d4c6b;
+            color: white;
+            box-shadow: 0 6px 14px rgba(20,110,150,0.4);
+        }
+        .type-btn .emoji {
+            font-size: 1.3rem;
+        }
+        .custom-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .custom-row input {
+            flex: 2 1 220px;
+            padding: 14px 20px;
+            border: 2px solid #b7d3e8;
+            border-radius: 60px;
+            font-size: 1rem;
+            background: white;
+        }
+        .custom-row button {
+            background: #1b6990;
+            border: none;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 8px 18px rgba(10,90,130,0.3);
+            cursor: pointer;
+            border: 1px solid #91c7e6;
+        }
+        .shoot-single {
+            background: linear-gradient(145deg, #176d8f, #0a4b68);
+            border: none;
+            width: 100%;
+            padding: 24px 12px;
+            border-radius: 120px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            box-shadow: 0 20px 30px -8px #0a4055;
+            margin: 10px 0 18px;
+            cursor: pointer;
+            border: 3px solid rgba(255,255,255,0.3);
+            transition: 0.1s;
+        }
+        .shoot-single:active {
+            transform: scale(0.97);
+        }
+        .preview-bar {
+            background: #e2f0f9;
+            border-radius: 60px;
+            padding: 15px 22px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin: 12px 0 10px;
+            border: 1px solid #b3d5ed;
+        }
+        .preview-label {
+            font-weight: 600;
+            color: #165a79;
+        }
+        .preview-filename {
+            background: #10455e;
+            color: white;
+            padding: 8px 28px;
+            border-radius: 60px;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 1.2rem;
+            letter-spacing: 0.5px;
+        }
+        .status {
+            text-align: center;
+            margin: 16px 0 0;
+            color: #186585;
+            font-weight: 500;
+        }
+        footer {
+            text-align: center;
+            color: #6f8fa8;
+            font-size: 0.85rem;
+            margin-top: 24px;
+            border-top: 1px dashed #b9d3e7;
+            padding-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>
+            📋 体检拍照器
+            <span class="badge">导入姓名+身份证</span>
+        </h1>
+        <div class="sub">
+            ⚡ 拍照自动命名格式： <strong>编号-姓名-类型.jpg</strong> （例：101-张-抽血现场.jpg）<br>
+            ⚡ 导入文件每行格式：姓名,身份证号 (或空格分隔)
+        </div>
+
+        <!-- 导入名单 & 搜索区域 -->
+        <div class="roster-section">
+            <div class="roster-header">
+                <button class="import-btn" id="importBtn">📂 导入姓名身份证</button>
+                <span class="file-name" id="fileNameDisplay">未选择文件</span>
+                <input type="file" id="importFile" accept=".txt,.csv" style="display: none;">
+            </div>
+            <input type="text" class="search-box" id="searchInput" placeholder="🔍 输入姓名或身份证号搜索..." autocomplete="off">
+            <div class="roster-results" id="rosterResults"></div>
+            <div class="roster-info" id="rosterInfo">尚未导入名单，请先导入。</div>
+        </div>
+
+        <!-- 编号 + 姓名 + 自动递增 -->
+        <div class="input-row">
+            <div class="input-field">
+                <label>🔖 编号 <span style="font-weight:normal; color:#3b6f92;">(手动输入)</span></label>
+                <input type="text" id="idNumber" placeholder="例如 102" value="">
+            </div>
+            <div class="input-field">
+                <label>🧑 姓名</label>
+                <input type="text" id="fullName" placeholder="选择搜索或手动输入" value="">
+            </div>
+        </div>
+        
+        <div class="auto-inc-row">
+            <div class="checkbox-item">
+                <input type="checkbox" id="autoIncrementCheckbox">
+                <label for="autoIncrementCheckbox">🔁 拍照后自动递增编号</label>
+            </div>
+            <span class="hint-note">(仅当编号为纯数字时有效)</span>
+        </div>
+
+        <!-- 摄像头 -->
+        <div class="video-container">
+            <video id="video" autoplay playsinline></video>
+        </div>
+
+        <!-- 类型选择面板 -->
+        <div class="type-section">
+            <div class="type-header">
+                <span>🔘 选择一项检查类型 (单击选中)</span>
+            </div>
+            <div class="type-grid" id="typeGrid"></div>
+            <div class="custom-row">
+                <input type="text" id="customTypeInput" placeholder="例如：骨密度 / 眼底照相" value="">
+                <button id="addCustomBtn">➕ 添加自定义</button>
+            </div>
+            <div style="font-size:0.9rem; color:#1e6791; margin-top:10px;">点击自定义项即可切换选中</div>
+        </div>
+
+        <!-- 唯一拍照按钮 -->
+        <button class="shoot-single" id="singleShootBtn">
+            <span>📸</span> 拍 照 保 存 <span>🩻</span>
+        </button>
+
+        <!-- 文件名实时预览 -->
+        <div class="preview-bar">
+            <span class="preview-label">📎 即将保存为：</span>
+            <span class="preview-filename" id="filenamePreview">101-李-抽血现场.jpg</span>
+        </div>
+
+        <div id="statusMessage" class="status">✅ 选择类型，点击按钮拍照</div>
+        <footer>
+            ⚙️ 请允许摄像头权限 · 导入姓名+身份证，点击结果仅填充姓名 · 编号手动输入
+        </footer>
+    </div>
+
+    <canvas id="canvas" style="display: none;"></canvas>
+
+    <script>
+        (function() {
+            // ---------- 预设类型 ----------
+            const presetTypes = [
+                { name: '血常规', emoji: '🩸' },
+                { name: '血生化', emoji: '🧪' },
+                { name: '糖化血红蛋白', emoji: '🍬' },
+                { name: '尿常规', emoji: '💧' },
+                { name: '胸片', emoji: '🫁' },
+                { name: '心电图', emoji: '📈' },
+                { name: 'B超单', emoji: '🖨️' },
+                { name: '血压', emoji: '❤️' },
+                { name: '足背动脉', emoji: '🦶' },
+                { name: '抽血现场', emoji: '🩹' },
+                { name: 'B超现场', emoji: '🔍' }
+            ];
+
+            let currentType = presetTypes[0].name;
+            let customTypes = [];
+
+            // 名单数据：存储姓名和身份证号
+            let roster = [];  // 格式: [{ name, idcard }]
+            let filteredRoster = [];
+
+            // DOM 元素
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            const idInput = document.getElementById('idNumber');
+            const nameInput = document.getElementById('fullName');
+            const autoIncCheck = document.getElementById('autoIncrementCheckbox');
+            const typeGrid = document.getElementById('typeGrid');
+            const customInput = document.getElementById('customTypeInput');
+            const addCustomBtn = document.getElementById('addCustomBtn');
+            const filenamePreview = document.getElementById('filenamePreview');
+            const statusDiv = document.getElementById('statusMessage');
+            const singleShootBtn = document.getElementById('singleShootBtn');
+
+            // 导入名单相关
+            const importBtn = document.getElementById('importBtn');
+            const importFile = document.getElementById('importFile');
+            const fileNameDisplay = document.getElementById('fileNameDisplay');
+            const searchInput = document.getElementById('searchInput');
+            const rosterResults = document.getElementById('rosterResults');
+            const rosterInfo = document.getElementById('rosterInfo');
+
+            let videoWidth = 640, videoHeight = 480;
+
+            // ---------- 渲染类型按钮 ----------
+            function renderTypeButtons() {
+                typeGrid.innerHTML = '';
+
+                presetTypes.forEach(p => {
+                    const btn = document.createElement('button');
+                    btn.className = `type-btn ${p.name === currentType ? 'active' : ''}`;
+                    btn.setAttribute('data-type', p.name);
+                    btn.innerHTML = `<span class="emoji">${p.emoji}</span> ${p.name}`;
+                    btn.addEventListener('click', () => {
+                        currentType = p.name;
+                        renderTypeButtons();
+                        updatePreview();
+                        statusDiv.innerText = `已选择：${currentType}`;
+                    });
+                    typeGrid.appendChild(btn);
+                });
+
+                customTypes.forEach(custom => {
+                    const btn = document.createElement('button');
+                    btn.className = `type-btn ${custom === currentType ? 'active' : ''}`;
+                    btn.setAttribute('data-type', custom);
+                    btn.style.background = custom === currentType ? '#4a7a9c' : '#f9f2e7';
+                    btn.style.borderColor = '#b8a9a0';
+                    btn.innerHTML = `<span class="emoji">📌</span> ${custom}`;
+                    btn.addEventListener('click', () => {
+                        currentType = custom;
+                        renderTypeButtons();
+                        updatePreview();
+                        statusDiv.innerText = `已选择：${currentType}`;
+                    });
+                    typeGrid.appendChild(btn);
+                });
+            }
+
+            // 添加自定义类型
+            function addCustomType() {
+                let newType = customInput.value.trim();
+                if (newType === '') {
+                    statusDiv.innerText = '⚠️ 请输入类型名称';
+                    statusDiv.style.color = '#b85c00';
+                    return;
+                }
+                newType = newType.replace(/[\\/:*?"<>|]/g, '_');
+                if (newType === '') {
+                    statusDiv.innerText = '❌ 类型不能为空或全为非法字符';
+                    statusDiv.style.color = '#b91c1c';
+                    return;
+                }
+                const allTypeNames = [...presetTypes.map(p => p.name), ...customTypes];
+                if (allTypeNames.some(t => t.toLowerCase() === newType.toLowerCase())) {
+                    statusDiv.innerText = `⚠️ 类型“${newType}”已存在`;
+                    statusDiv.style.color = '#b85c00';
+                    return;
+                }
+                customTypes.push(newType);
+                currentType = newType;
+                customInput.value = '';
+                renderTypeButtons();
+                updatePreview();
+                statusDiv.innerText = `✅ 已添加并选中：${newType}`;
+                statusDiv.style.color = '#0b5e2e';
+            }
+
+            // 更新文件名预览
+            function updatePreview() {
+                let id = idInput.value.trim() || '编号';
+                let name = nameInput.value.trim() || '姓名';
+                id = id.replace(/[\\/:*?"<>|]/g, '_');
+                name = name.replace(/[\\/:*?"<>|]/g, '_');
+                if (id === '') id = '编号';
+                if (name === '') name = '姓名';
+                const typeSafe = currentType.replace(/[\\/:*?"<>|]/g, '_');
+                filenamePreview.textContent = `${id}-${name}-${typeSafe}.jpg`;
+            }
+
+            // 编号自动递增
+            function incrementIdIfNeeded() {
+                if (!autoIncCheck.checked) return;
+                let idVal = idInput.value.trim();
+                if (idVal === '') return;
+                const parsed = parseInt(idVal, 10);
+                if (isNaN(parsed)) {
+                    statusDiv.innerText = '⚠️ 编号非数字，无法自动递增';
+                    statusDiv.style.color = '#b85c00';
+                    return;
+                }
+                const newId = (parsed + 1).toString();
+                if (idVal.length > newId.length && idVal.charAt(0) === '0') {
+                    idInput.value = newId.padStart(idVal.length, '0');
+                } else {
+                    idInput.value = newId;
+                }
+                updatePreview();
+            }
+
+            // 拍照
+            function takePicture() {
+                const id = idInput.value.trim();
+                const name = nameInput.value.trim();
+                if (id === '' || name === '') {
+                    statusDiv.innerText = '⚠️ 请填写编号和姓名';
+                    statusDiv.style.color = '#b45309';
+                    return;
+                }
+                let safeId = id.replace(/[\\/:*?"<>|]/g, '_');
+                let safeName = name.replace(/[\\/:*?"<>|]/g, '_');
+                if (safeId === '' || safeName === '') {
+                    statusDiv.innerText = '❌ 编号或姓名含有非法字符';
+                    statusDiv.style.color = '#b91c1c';
+                    return;
+                }
+                const safeType = currentType.replace(/[\\/:*?"<>|]/g, '_');
+
+                if (video.videoWidth && video.videoHeight) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                } else {
+                    canvas.width = videoWidth;
+                    canvas.height = videoHeight;
+                }
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                const fileName = `${safeId}-${safeName}-${safeType}.jpg`;
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = fileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        statusDiv.innerText = `✅ 已保存：${fileName}`;
+                        statusDiv.style.color = '#0b5e2e';
+                        incrementIdIfNeeded();
+                        updatePreview();
+                    } else {
+                        statusDiv.innerText = '❌ 拍照失败，请重试';
+                        statusDiv.style.color = '#b91c1c';
+                    }
+                }, 'image/jpeg', 0.92);
+            }
+
+            // ---------- 导入名单功能 (姓名 + 身份证号) ----------
+            function parseImportedFile(file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const content = e.target.result;
+                    const lines = content.split(/\r?\n/);
+                    const newRoster = [];
+                    lines.forEach(line => {
+                        line = line.trim();
+                        if (line === '' || line.startsWith('#')) return;
+                        // 尝试按逗号或空格分割
+                        let parts = line.split(/[,\s]+/);
+                        if (parts.length >= 2) {
+                            const name = parts[0].trim();
+                            const idcard = parts[1].trim();
+                            if (name && idcard) {
+                                newRoster.push({ name, idcard });
+                            }
+                        }
+                    });
+                    if (newRoster.length > 0) {
+                        roster = newRoster;
+                        fileNameDisplay.textContent = file.name;
+                        rosterInfo.textContent = `已导入 ${roster.length} 条记录（姓名+身份证）`;
+                        searchInput.disabled = false;
+                        searchInput.placeholder = '🔍 输入姓名或身份证号搜索...';
+                        // 清空搜索框和结果
+                        searchInput.value = '';
+                        rosterResults.classList.remove('show');
+                        statusDiv.innerText = `✅ 导入成功，共 ${roster.length} 人`;
+                    } else {
+                        rosterInfo.textContent = '导入失败或无有效数据';
+                    }
+                };
+                reader.readAsText(file);
+            }
+
+            importBtn.addEventListener('click', () => {
+                importFile.click();
+            });
+
+            importFile.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    parseImportedFile(file);
+                }
+                importFile.value = ''; // 允许重复导入同一文件
+            });
+
+            // 搜索并显示结果
+            function searchRoster(keyword) {
+                if (!roster.length) return [];
+                keyword = keyword.toLowerCase();
+                return roster.filter(item => 
+                    item.name.toLowerCase().includes(keyword) || 
+                    item.idcard.toLowerCase().includes(keyword)
+                ).slice(0, 30);
+            }
+
+            function renderSearchResults(results) {
+                rosterResults.innerHTML = '';
+                if (results.length === 0) {
+                    rosterResults.innerHTML = '<div class="roster-item" style="color:#888;">无匹配项</div>';
+                } else {
+                    results.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'roster-item';
+                        div.innerHTML = `<span class="roster-name">${item.name}</span><span class="roster-idcard">${item.idcard}</span>`;
+                        div.addEventListener('click', () => {
+                            // 只填充姓名，编号保留手动输入
+                            nameInput.value = item.name;
+                            updatePreview();
+                            rosterResults.classList.remove('show');
+                            searchInput.value = ''; // 清空搜索框
+                            statusDiv.innerText = `已选择姓名：${item.name}`;
+                        });
+                        rosterResults.appendChild(div);
+                    });
+                }
+                rosterResults.classList.add('show');
+            }
+
+            searchInput.addEventListener('input', (e) => {
+                const keyword = e.target.value.trim();
+                if (keyword === '' || roster.length === 0) {
+                    rosterResults.classList.remove('show');
+                    return;
+                }
+                const results = searchRoster(keyword);
+                renderSearchResults(results);
+            });
+
+            // 点击其他地方隐藏搜索结果
+            document.addEventListener('click', (e) => {
+                if (!rosterResults.contains(e.target) && e.target !== searchInput) {
+                    rosterResults.classList.remove('show');
+                }
+            });
+
+            // 初始化摄像头
+            async function initCamera() {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: { ideal: 'environment' } }
+                    });
+                    video.srcObject = stream;
+                    video.addEventListener('loadedmetadata', () => {
+                        videoWidth = video.videoWidth;
+                        videoHeight = video.videoHeight;
+                        canvas.width = videoWidth;
+                        canvas.height = videoHeight;
+                        statusDiv.innerText = '摄像头已就绪';
+                    });
+                } catch (err) {
+                    statusDiv.innerText = '❌ 无法访问摄像头，请检查权限';
+                    statusDiv.style.color = '#b91c1c';
+                    singleShootBtn.disabled = true;
+                }
+            }
+
+            // 事件绑定
+            idInput.addEventListener('input', updatePreview);
+            nameInput.addEventListener('input', updatePreview);
+            singleShootBtn.addEventListener('click', takePicture);
+            addCustomBtn.addEventListener('click', addCustomType);
+            customInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') addCustomType();
+            });
+
+            // 节流
+            let shooting = false;
+            singleShootBtn.addEventListener('click', function(e) {
+                if (shooting) {
+                    e.preventDefault();
+                    return;
+                }
+                shooting = true;
+                setTimeout(() => { shooting = false; }, 800);
+            });
+
+            // 初始渲染
+            renderTypeButtons();
+            updatePreview();
+            initCamera();
+
+            window.addEventListener('beforeunload', () => {
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(t => t.stop());
+                }
+            });
+
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                statusDiv.innerText = '❌ 当前浏览器不支持摄像头';
+                singleShootBtn.disabled = true;
+            }
+        })();
+    </script>
+</body>
+</html>
