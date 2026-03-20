@@ -402,7 +402,7 @@
             padding-top: 10px;
         }
 
-        /* ---------- 手机优化 (超紧凑) ---------- */
+        /* ---------- 手机优化 (超紧凑，相机自然居中) ---------- */
         @media (max-width: 900px) {
             body {
                 padding: 4px;
@@ -426,14 +426,17 @@
                 border-left-width: 4px;
             }
             .main-row {
+                flex-direction: column;      /* 上下排列 */
                 gap: 12px;
             }
             .camera-left {
+                width: 100%;
                 min-width: auto;
             }
             .right-panel {
-                gap: 8px;
+                width: 100%;
                 min-width: auto;
+                gap: 8px;
             }
             .roster-section {
                 padding: 8px 10px;
@@ -656,7 +659,7 @@
         </div>
 
         <footer>
-            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · 全屏紧凑设计
+            ⚙️ 允许摄像头 · 点击结果仅填充姓名 · PC左置/手机中置 · 全屏紧凑设计
         </footer>
     </div>
 
