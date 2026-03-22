@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>智能文档扫描仪 - 本地化扫描App</title>
+    <!-- jsPDF 用于生成PDF文档 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 避免拖动时选中文本，但输入框不受影响 */
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 16px;
+            color: #0f172a;
+        }
+        .app-container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.15);
+            overflow: hidden;
+            padding: 20px 16px 24px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1e293b;
+        }
+        h1 small {
+            font-size: 0.8rem;
+            font-weight: normal;
+            background: #eef2ff;
+            padding: 4px 10px;
+            border-radius: 40px;
+            color: #2563eb;
+        }
+        .sub {
+            color: #475569;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            border-left: 3px solid #3b82f6;
+            padding-left: 12px;
+        }
+        /* 预览区域 */
+        .preview-area {
+            background: #f8fafc;
+            border-radius: 28px;
+            padding: 12px;
+            margin-bottom: 20px;
+            box-shadow: inset 0 1px 3px #0001, 0 2px 6px rgba(0,0,0,0.05);
+        }
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #e2e8f0;
+            border-radius: 20px;
+            min-height: 280px;
+            position: relative;
+        }
+        canvas#mainCanvas {
+            max-width: 100%;
+            height: auto;
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: block;
+            margin: 0 auto;
+            cursor: pointer;
+        }
+        .info-tip {
+            text-align: center;
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 8px;
+        }
+        /* 按钮网格 */
+        .btn-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 20px 0 16px;
+            justify-content: center;
+        }
+        .btn {
+            background: white;
+            border: 1px solid #cbd5e1;
+            padding: 10px 18px;
+            border-radius: 60px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            color: #1e293b;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .btn-primary {
+            background: #2563eb;
+            border-color: #2563eb;
+            color: white;
+            box-shadow: 0 4px 8px -2px #2563eb40;
+        }
+        .btn-danger {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: white;
+        }
+        .btn-outline {
+            border: 1px solid #3b82f6;
+            color: #2563eb;
+        }
+        .btn:active {
+            transform: scale(0.96);
+        }
+        /* 模态框 (校正模式/证件排版专用) */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-card {
+            background: white;
+            max-width: 95%;
+            width: 600px;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
+            animation: fadeInUp 0.2s ease;
+        }
+        .modal-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            font-size: 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-body {
+            padding: 16px;
+            max-height: 60vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+        .modal-footer {
+            padding: 12px 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        canvas.modal-canvas {
+            max-width: 100%;
+            background: #f1f5f9;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .corner-point {
+            cursor: grab;
+        }
+        button:disabled {
+            opacity: 0.5;
+            transform: none;
+        }
+        .flex-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .badge {
+            background: #e6f0ff;
+            border-radius: 20px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+        }
+        input, .file-label {
+            font-size: 0.8rem;
+        }
+        .hidden-input {
+            display: none;
+        }
+        hr {
+            margin: 12px 0;
+            border-color: #e2e8f0;
+        }
+        @media (max-width: 550px) {
+            .btn { padding: 8px 14px; font-size: 0.75rem;}
+            h1 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <h1>📄 极速扫描仪 <small>本地化 · 隐私安全</small></h1>
+    <div class="sub">✨ 文档矫正 · 证件排版 · 保存图片/PDF</div>
+
+    <!-- 主预览区 -->
+    <div class="preview-area">
+        <div class="canvas-wrapper">
+            <canvas id="mainCanvas" width="600" height="400" style="width:100%; height:auto; max-width:600px; aspect-ratio:600/400"></canvas>
+        </div>
+        <div class="info-tip">👆 点击校正可调整文档四角 | 支持证件智能排版</div>
+    </div>
+
+    <!-- 按钮操作区 -->
+    <div class="btn-grid">
+        <div class="btn" id="openCameraBtn">📷 拍照</div>
+        <div class="btn" id="uploadBtn">🖼️ 相册/文件</div>
+        <div class="btn btn-primary" id="docCorrectBtn">✂️ 透视校正</div>
+        <div class="btn btn-outline" id="idLayoutBtn">🆔 证件排版</div>
+        <div class="btn" id="saveImageBtn">💾 存为图片</div>
+        <div class="btn" id="savePdfBtn">📑 存为PDF</div>
+    </div>
+</div>
+
+<!-- 相机隐藏视频元素 -->
+<video id="videoCamera" autoplay playsinline style="display:none; width:100%;"></video>
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+
+<!-- 透视校正模态框 -->
+<div id="correctionModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span>📐 拖动四个角点调整文档边缘</span>
+            <button id="closeCorrectionBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <canvas id="correctionCanvas" class="modal-canvas" width="500" height="400" style="width:100%; height:auto; background:#eef2ff; border-radius:16px;"></canvas>
+            <div class="info-tip" style="margin-top:8px;">✨ 将圆点拖拽到文档四个角 → 点击【应用矫正】</div>
+        </div>
+        <div class="modal-footer">
+            <button id="cancelCorrectionBtn" class="btn">取消</button>
+            <button id="applyCorrectionBtn" class="btn btn-primary">应用矫正</button>
+        </div>
+    </div>
+</div>
+
+<!-- 证件排版模态框 (身份证正反面合成) -->
+<div id="idLayoutModal" class="modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <span>🆔 证件智能排版 (身份证正反面合成)</span>
+            <button id="closeIdModalBtn" style="background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="flex-row" style="margin-bottom:12px;">
+                <button id="selectFrontBtn" class="btn">📸 选择正面</button>
+                <button id="selectBackBtn" class="btn">📸 选择反面</button>
+                <button id="useCurrentFrontBtn" class="btn btn-outline">使用当前图像作为正面</button>
+            </div>
+            <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+                <div><strong>正面预览</strong><br><canvas id="frontPreview" width="120" height="80" style="border:1px solid #ccc; border-radius:8px; background:#f9f9f9;"></canvas></div>
+                <div><strong>反面预览</strong><br><canvas id="backPreview" width="120" height="80" style="border:1px solid #ccc; border-radius:8px; background:#f9f9f9;"></canvas></div>
+            </div>
+            <div style="margin: 12px 0;">
+                <label>排版模式：</label>
+                <select id="layoutMode" style="padding:6px; border-radius:30px;">
+                    <option value="horizontal">左右并排 (A4比例)</option>
+                    <option value="vertical">上下排列</option>
+                </select>
+            </div>
+            <button id="previewLayoutBtn" class="btn btn-primary">预览合成结果</button>
+            <div style="margin-top:12px;">
+                <canvas id="layoutResultCanvas" width="300" height="200" style="width:100%; max-width:400px; background:#eef; border-radius:12px;"></canvas>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button id="applyLayoutBtn" class="btn btn-primary">✅ 应用并替换主图</button>
+            <button id="cancelLayoutBtn" class="btn">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ---------- 全局变量 ----------
+    let currentImage = null;          // HTMLImageElement 原始图像对象
+    let mainCanvas = document.getElementById('mainCanvas');
+    let ctx = mainCanvas.getContext('2d');
+
+    // 校正相关全局
+    let correctionCtx, correctionCanvasEl;
+    let controlPoints = [];    // 存储四个点 {x, y} 基于校正canvas坐标系
+    let originalImageForCorrection = null; // 当前校正用的图像
+    let isDragging = false;
+    let dragIndex = -1;
+    let dragMode = false;
+
+    // 证件排版变量
+    let frontImage = null;
+    let backImage = null;
+
+    // 相机相关
+    const video = document.getElementById('videoCamera');
+    let stream = null;
+
+    // ---------- 辅助函数 ----------
+    function loadImageToMain(imgElement) {
+        if (!imgElement) return;
+        currentImage = imgElement;
+        // 设置canvas尺寸适应图片比例
+        const maxWidth = 600;
+        const ratio = currentImage.height / currentImage.width;
+        let drawWidth = currentImage.width;
+        let drawHeight = currentImage.height;
+        if (drawWidth > maxWidth) {
+            drawWidth = maxWidth;
+            drawHeight = drawWidth * ratio;
+        }
+        mainCanvas.width = drawWidth;
+        mainCanvas.height = drawHeight;
+        ctx.clearRect(0, 0, mainCanvas.width, mainCanvas.height);
+        ctx.drawImage(currentImage, 0, 0, drawWidth, drawHeight);
+    }
+
+    // 从文件/Blob生成图像
+    function loadImageFromFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                loadImageToMain(img);
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 将当前canvas内容转为图片对象
+    function getCurrentImageFromCanvas() {
+        return new Promise((resolve) => {
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = mainCanvas.width;
+            tempCanvas.height = mainCanvas.height;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(mainCanvas, 0, 0);
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.src = tempCanvas.toDataURL('image/png');
+        });
+    }
+
+    // 透视变换核心: 给定源点4个(原始图像坐标系) 目标矩形宽高 -> 返回变换后的canvas
+    function perspectiveTransform(sourceImg, srcPoints, targetWidth, targetHeight) {
+        // srcPoints: 按顺序 [左上,右上,右下,左下] 基于原图实际像素坐标
+        const dstPoints = [
+            { x: 0, y: 0 },
+            { x: targetWidth, y: 0 },
+            { x: targetWidth, y: targetHeight },
+            { x: 0, y: targetHeight }
+        ];
+        // 计算透视变换矩阵 (使用高斯约当消元法，求从目标点到源点的映射)
+        function getTransformMatrix(src, dst) {
+            // 基于 solveHomography 思路，构建8元方程组
+            let A = [];
+            for (let i = 0; i < 4; i++) {
+                let x = dst[i].x, y = dst[i].y;
+                let u = src[i].x, v = src[i].y;
+                A.push([x, y, 1, 0, 0, 0, -u*x, -u*y, u]);
+                A.push([0, 0, 0, x, y, 1, -v*x, -v*y, v]);
+            }
+            // 高斯消元求解 H 9个元素，最后归一化
+            let h = [0,0,0,0,0,0,0,0,1];
+            // 简化: 使用数值库太麻烦，采用直接调用现成的透视库? 手写稳定解法复杂，改用更可靠开源函数: 参考经典透视实现
+            // 为保证可靠性，实现标准getPerspectiveTransform + warpPerspective 手动插值
+            // 此处实现一个可靠的双线性插值透视
+            function getMatrix(src, dst) {
+                // 利用求解线性方程组得到单应矩阵 (简易实现)
+                let p = [];
+                for(let i=0;i<4;i++){
+                    p.push([src[i].x, src[i].y, 1, 0,0,0, -dst[i].x*src[i].x, -dst[i].x*src[i].y]);
+                    p.push([0,0,0, src[i].x, src[i].y, 1, -dst[i].y*src[i].x, -dst[i].y*src[i].y]);
+                }
+                let B = [dst[0].x, dst[0].y, dst[1].x, dst[1].y, dst[2].x, dst[2].y, dst[3].x, dst[3].y];
+                // 高斯消元解 8x8
+                function gauss(A, b) {
+                    let n = A.length;
+                    for(let i=0;i<n;i++){
+                        let maxRow = i;
+                        for(let k=i+1;k<n;k++) if(Math.abs(A[k][i]) > Math.abs(A[maxRow][i])) maxRow=k;
+                        [A[i], A[maxRow]] = [A[maxRow], A[i]];
+                        [b[i], b[maxRow]] = [b[maxRow], b[i]];
+                        for(let k=i+1;k<n;k++){
+                            let factor = A[k][i] / A[i][i];
+                            for(let j=i;j<n;j++) A[k][j] -= factor * A[i][j];
+                            b[k] -= factor * b[i];
+                        }
+                    }
+                    let x = new Array(n).fill(0);
+                    for(let i=n-1;i>=0;i--){
+                        let sum=0;
+                        for(let j=i+1;j<n;j++) sum += A[i][j]*x[j];
+                        x[i] = (b[i]-sum)/A[i][i];
+                    }
+                    return x;
+                }
+                let A8 = p.slice(0,8).map(row=>row.slice(0,8));
+                let Hvec = gauss(A8, B);
+                Hvec.push(1);
+                return [[Hvec[0], Hvec[1], Hvec[2]],[Hvec[3], Hvec[4], Hvec[5]],[Hvec[6], Hvec[7], Hvec[8]]];
+            }
+            let H = getMatrix(src, dst);
+            return H;
+        }
+        let H = getTransformMatrix(srcPoints, dstPoints);
+        // 反向映射生成目标canvas
+        let outCanvas = document.createElement('canvas');
+        outCanvas.width = targetWidth;
+        outCanvas.height = targetHeight;
+        let outCtx = outCanvas.getContext('2d');
+        let imgData = outCtx.getImageData(0,0,targetWidth,targetHeight);
+        let data = imgData.data;
+        let srcW = sourceImg.width, srcH = sourceImg.height;
+        let srcCanvas = document.createElement('canvas');
+        srcCanvas.width = srcW;
+        srcCanvas.height = srcH;
+        let srcCtx = srcCanvas.getContext('2d');
+        srcCtx.drawImage(sourceImg, 0, 0);
+        let srcData = srcCtx.getImageData(0,0,srcW,srcH).data;
+        
+        for(let y=0; y<targetHeight; y++){
+            for(let x=0; x<targetWidth; x++){
+                let denominator = H[2][0]*x + H[2][1]*y + H[2][2];
+                let srcX = (H[0][0]*x + H[0][1]*y + H[0][2]) / denominator;
+                let srcY = (H[1][0]*x + H[1][1]*y + H[1][2]) / denominator;
+                if(srcX>=0 && srcX<srcW-1 && srcY>=0 && srcY<srcH-1){
+                    let x1 = Math.floor(srcX), y1 = Math.floor(srcY);
+                    let x2 = x1+1, y2 = y1+1;
+                    let fx = srcX - x1, fy = srcY - y1;
+                    let idx00 = (y1*srcW + x1)*4;
+                    let idx10 = (y1*srcW + x2)*4;
+                    let idx01 = (y2*srcW + x1)*4;
+                    let idx11 = (y2*srcW + x2)*4;
+                    for(let c=0;c<3;c++){
+                        let v00 = srcData[idx00+c];
+                        let v10 = srcData[idx10+c];
+                        let v01 = srcData[idx01+c];
+                        let v11 = srcData[idx11+c];
+                        let v0 = v00*(1-fx) + v10*fx;
+                        let v1 = v01*(1-fx) + v11*fx;
+                        let val = v0*(1-fy) + v1*fy;
+                        data[(y*targetWidth + x)*4 + c] = val;
+                    }
+                    data[(y*targetWidth + x)*4 + 3] = 255;
+                } else {
+                    data[(y*targetWidth + x)*4 + 3] = 0;
+                }
+            }
+        }
+        outCtx.putImageData(imgData, 0, 0);
+        return outCanvas;
+    }
+
+    // 校正模块初始化
+    function initCorrection(imageObj) {
+        originalImageForCorrection = imageObj;
+        correctionCanvasEl = document.getElementById('correctionCanvas');
+        correctionCtx = correctionCanvasEl.getContext('2d');
+        // 设置画布尺寸适应图片比例
+        let maxW = 500;
+        let ratio = imageObj.height / imageObj.width;
+        let dispW = Math.min(maxW, imageObj.width);
+        let dispH = dispW * ratio;
+        correctionCanvasEl.width = dispW;
+        correctionCanvasEl.height = dispH;
+        correctionCtx.drawImage(imageObj, 0, 0, dispW, dispH);
+        // 初始化四个控制点 (接近四角偏移10px)
+        let pad = 15;
+        controlPoints = [
+            { x: pad, y: pad },                                    // 左上
+            { x: dispW - pad, y: pad },                            // 右上
+            { x: dispW - pad, y: dispH - pad },                    // 右下
+            { x: pad, y: dispH - pad }                             // 左下
+        ];
+        drawCorrectionPoints();
+        attachCorrectionEvents();
+    }
+
+    function drawCorrectionPoints() {
+        correctionCtx.clearRect(0, 0, correctionCanvasEl.width, correctionCanvasEl.height);
+        correctionCtx.drawImage(originalImageForCorrection, 0, 0, correctionCanvasEl.width, correctionCanvasEl.height);
+        for(let i=0;i<controlPoints.length;i++){
+            let p = controlPoints[i];
+            correctionCtx.beginPath();
+            correctionCtx.arc(p.x, p.y, 8, 0, 2*Math.PI);
+            correctionCtx.fillStyle = "#3b82f6";
+            correctionCtx.fill();
+            correctionCtx.strokeStyle = "white";
+            correctionCtx.lineWidth = 2;
+            correctionCtx.stroke();
+            correctionCtx.fillStyle = "white";
+            correctionCtx.font = "bold 14px system-ui";
+            correctionCtx.fillText(i+1, p.x-4, p.y+5);
+        }
+    }
+
+    function attachCorrectionEvents() {
+        let getMouseCoord = (e) => {
+            const rect = correctionCanvasEl.getBoundingClientRect();
+            const scaleX = correctionCanvasEl.width / rect.width;
+            const scaleY = correctionCanvasEl.height / rect.height;
+            let clientX, clientY;
+            if(e.touches){
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            let canvasX = (clientX - rect.left) * scaleX;
+            let canvasY = (clientY - rect.top) * scaleY;
+            return { x: Math.min(Math.max(0, canvasX), correctionCanvasEl.width), y: Math.min(Math.max(0, canvasY), correctionCanvasEl.height) };
+        };
+        function onMouseDown(e){
+            e.preventDefault();
+            let coord = getMouseCoord(e);
+            for(let i=0;i<controlPoints.length;i++){
+                let dx = controlPoints[i].x - coord.x;
+                let dy = controlPoints[i].y - coord.y;
+                if(Math.hypot(dx,dy) < 15){
+                    isDragging = true;
+                    dragIndex = i;
+                    break;
+                }
+            }
+        }
+        function onMouseMove(e){
+            if(!isDragging || dragIndex===-1) return;
+            e.preventDefault();
+            let coord = getMouseCoord(e);
+            controlPoints[dragIndex] = coord;
+            drawCorrectionPoints();
+        }
+        function onMouseUp(e){
+            isDragging = false;
+            dragIndex = -1;
+        }
+        correctionCanvasEl.addEventListener('mousedown', onMouseDown);
+        window.addEventListener('mousemove', onMouseMove);
+        window.addEventListener('mouseup', onMouseUp);
+        correctionCanvasEl.addEventListener('touchstart', onMouseDown);
+        window.addEventListener('touchmove', onMouseMove);
+        window.addEventListener('touchend', onMouseUp);
+        // 存储移除事件句柄在关闭时清理, 简单保存函数引用, 关闭时移除
+        correctionCanvasEl._listeners = { onMouseDown, onMouseMove, onMouseUp };
+    }
+    function cleanupCorrectionEvents() {
+        if(correctionCanvasEl && correctionCanvasEl._listeners){
+            let lis = correctionCanvasEl._listeners;
+            correctionCanvasEl.removeEventListener('mousedown', lis.onMouseDown);
+            window.removeEventListener('mousemove', lis.onMouseMove);
+            window.removeEventListener('mouseup', lis.onMouseUp);
+            correctionCanvasEl.removeEventListener('touchstart', lis.onMouseDown);
+            window.removeEventListener('touchmove', lis.onMouseMove);
+            window.removeEventListener('touchend', lis.onMouseUp);
+        }
+    }
+
+    // 执行校正
+    async function applyPerspective() {
+        if(!originalImageForCorrection) return;
+        // 将控制点从canvas显示坐标映射回原始图像坐标
+        let dispW = correctionCanvasEl.width;
+        let dispH = correctionCanvasEl.height;
+        let srcW = originalImageForCorrection.width;
+        let srcH = originalImageForCorrection.height;
+        let srcPoints = controlPoints.map(p => ({
+            x: (p.x / dispW) * srcW,
+            y: (p.y / dispH) * srcH
+        }));
+        let targetW = Math.max(800, Math.floor(srcW*0.8));
+        let targetH = Math.floor(targetW * (Math.hypot(srcPoints[1].x-srcPoints[0].x, srcPoints[1].y-srcPoints[0].y) / Math.hypot(srcPoints[2].x-srcPoints[3].x, srcPoints[2].y-srcPoints[3].y) || 1));
+        targetH = Math.min(2000, targetH);
+        let warpedCanvas = perspectiveTransform(originalImageForCorrection, srcPoints, targetW, targetH);
+        let newImg = new Image();
+        return new Promise((resolve) => {
+            newImg.onload = () => resolve(newImg);
+            newImg.src = warpedCanvas.toDataURL();
+        });
+    }
+
+    // 证件排版核心
+    function renderLayout(front, back, mode, targetCanvas) {
+        if(!front && !back) return;
+        const canvas = targetCanvas;
+        const ctx = canvas.getContext('2d');
+        let w = 500, h = 350;
+        if(mode === 'horizontal'){ w = 550; h = 350; }
+        else { w = 400; h = 550; }
+        canvas.width = w; canvas.height = h;
+        ctx.fillStyle = '#fef9e3';
+        ctx.fillRect(0,0,w,h);
+        if(mode === 'horizontal'){
+            if(front){
+                let fw = w/2 - 10, fh = (front.height/front.width)*fw;
+                ctx.drawImage(front, 10, (h-fh)/2, fw, fh);
+            }
+            if(back){
+                let bw = w/2 - 10, bh = (back.height/back.width)*bw;
+                ctx.drawImage(back, w/2+5, (h-bh)/2, bw, bh);
+            }
+        } else {
+            let topH = h/2 - 10;
+            if(front){
+                let fw = w-30, fh = (front.height/front.width)*fw;
+                if(fh>topH) fh=topH;
+                ctx.drawImage(front, 15, 10, fw, fh);
+            }
+            if(back){
+                let bw = w-30, bh = (back.height/back.width)*bw;
+                if(bh>topH) bh=topH;
+                ctx.drawImage(back, 15, h/2+5, bw, bh);
+            }
+        }
+    }
+
+    // 保存为PDF
+    async function saveAsPDF() {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const canvas = mainCanvas;
+        const imgData = canvas.toDataURL('image/png');
+        const imgWidth = 190;
+        const pageHeight = 277;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let position = 10;
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        pdf.save('扫描文档.pdf');
+    }
+
+    // 关闭模态框通用
+    function closeCorrectionModal() { document.getElementById('correctionModal').style.display = 'none'; cleanupCorrectionEvents(); }
+    function closeIdModal() { document.getElementById('idLayoutModal').style.display = 'none'; frontImage=null; backImage=null; }
+
+    // 相机拍照
+    async function openCamera(){
+        if(stream) stream.getTracks().forEach(t=>t.stop());
+        try{
+            stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+            video.srcObject = stream;
+            video.style.display = 'block';
+            video.play();
+            // 截取拍照
+            const track = stream.getVideoTracks()[0];
+            const imageCapture = new ImageCapture(track);
+            const blob = await imageCapture.takePhoto();
+            const img = new Image();
+            img.onload = () => {
+                loadImageToMain(img);
+                video.style.display = 'none';
+                stream.getTracks().forEach(t=>t.stop());
+                stream=null;
+            };
+            img.src = URL.createObjectURL(blob);
+        }catch(e){
+            alert("相机不可用，请使用上传图片");
+        }
+    }
+
+    // 页面初始化
+    window.onload = () => {
+        // 默认加载示例图
+        const dummyImg = new Image();
+        dummyImg.onload = () => loadImageToMain(dummyImg);
+        dummyImg.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect width='400' height='300' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' font-size='20' fill='%23333' text-anchor='middle' dy='.3em'%3E示例文档%3C/text%3E%3C/svg%3E";
+        
+        document.getElementById('openCameraBtn').onclick = openCamera;
+        document.getElementById('uploadBtn').onclick = () => document.getElementById('fileInput').click();
+        document.getElementById('fileInput').onchange = (e) => { if(e.target.files[0]) loadImageFromFile(e.target.files[0]); };
+        document.getElementById('saveImageBtn').onclick = async () => { const link = document.createElement('a'); link.download = 'scan.png'; link.href = mainCanvas.toDataURL(); link.click(); };
+        document.getElementById('savePdfBtn').onclick = saveAsPDF;
+
+        // 校正
+        document.getElementById('docCorrectBtn').onclick = async () => {
+            let img = currentImage;
+            if(!img) return alert('请先加载图像');
+            initCorrection(img);
+            document.getElementById('correctionModal').style.display = 'flex';
+            document.getElementById('applyCorrectionBtn').onclick = async () => {
+                let newImg = await applyPerspective();
+                if(newImg) loadImageToMain(newImg);
+                closeCorrectionModal();
+            };
+            document.getElementById('closeCorrectionBtn').onclick = closeCorrectionModal;
+            document.getElementById('cancelCorrectionBtn').onclick = closeCorrectionModal;
+        };
+        // 证件排版逻辑
+        document.getElementById('idLayoutBtn').onclick = () => {
+            frontImage = null; backImage = null;
+            document.getElementById('frontPreview').getContext('2d').clearRect(0,0,120,80);
+            document.getElementById('backPreview').getContext('2d').clearRect(0,0,120,80);
+            document.getElementById('layoutResultCanvas').getContext('2d').clearRect(0,0,300,200);
+            document.getElementById('idLayoutModal').style.display = 'flex';
+        };
+        function loadSideImage(side){
+            let input = document.createElement('input');
+            input.type = 'file'; input.accept = 'image/*';
+            input.onchange = (e) => {
+                if(e.target.files[0]){
+                    let reader = new FileReader();
+                    reader.onload = (ev) => {
+                        let img = new Image();
+                        img.onload = () => {
+                            if(side === 'front') { frontImage = img; document.getElementById('frontPreview').getContext('2d').drawImage(img,0,0,120,80); }
+                            else { backImage = img; document.getElementById('backPreview').getContext('2d').drawImage(img,0,0,120,80); }
+                        };
+                        img.src = ev.target.result;
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            };
+            input.click();
+        }
+        document.getElementById('selectFrontBtn').onclick = () => loadSideImage('front');
+        document.getElementById('selectBackBtn').onclick = () => loadSideImage('back');
+        document.getElementById('useCurrentFrontBtn').onclick = () => { if(currentImage) { frontImage = currentImage; document.getElementById('frontPreview').getContext('2d').drawImage(currentImage,0,0,120,80); } else alert('无主图像'); };
+        document.getElementById('previewLayoutBtn').onclick = () => { let mode = document.getElementById('layoutMode').value; renderLayout(frontImage, backImage, mode, document.getElementById('layoutResultCanvas')); };
+        document.getElementById('applyLayoutBtn').onclick = () => {
+            let mode = document.getElementById('layoutMode').value;
+            let tempCanvas = document.createElement('canvas');
+            renderLayout(frontImage, backImage, mode, tempCanvas);
+            let finalImg = new Image();
+            finalImg.onload = () => { loadImageToMain(finalImg); closeIdModal(); };
+            finalImg.src = tempCanvas.toDataURL();
+        };
+        document.getElementById('closeIdModalBtn').onclick = closeIdModal;
+        document.getElementById('cancelLayoutBtn').onclick = closeIdModal;
+    };
+</script>
+</body>
+</html>
