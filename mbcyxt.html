@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>医疗健康档案抽样系统</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <!-- SheetJS for Excel handling -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e88e5',      // 医疗蓝
+                        secondary: '#4caf50',    // 绿色强调
+                        neutral: '#f5f5f5',      // 背景色
+                        warning: '#ff9800',      // 警告色
+                        danger: '#f44336',       // 错误色
+                        dark: '#263238'          // 深色文本
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        card: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .transition-all-300 {
+                transition: all 0.3s ease;
+            }
+            .scrollbar-thin {
+                scrollbar-width: thin;
+            }
+            .scrollbar-thin::-webkit-scrollbar {
+                width: 6px;
+                height: 6px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-track {
+                background: #f1f1f1;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb {
+                background: #888;
+                border-radius: 3px;
+            }
+            .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+                background: #555;
+            }
+        }
+        
+        /* 自定义动画 */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+        .animate-pulse {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* 拖拽上传区域样式 */
+        .dropzone {
+            border: 2px dashed #1e88e5;
+            transition: all 0.3s ease;
+        }
+        .dropzone:hover, .dropzone.active {
+            border-color: #4caf50;
+            background-color: rgba(76, 175, 80, 0.05);
+        }
+        
+        /* 表格样式 */
+        .data-table th {
+            position: sticky;
+            top: 0;
+            background-color: #1e88e5;
+            color: white;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- 顶部导航栏 -->
+    <header class="bg-primary text-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-heartbeat text-2xl"></i>
+                <h1 class="text-xl font-bold">医疗健康档案抽样系统</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="helpBtn" class="px-3 py-1 rounded bg-white bg-opacity-20 hover:bg-opacity-30 transition-all-300 flex items-center">
+                    <i class="fa fa-question-circle mr-1"></i> 操作指引
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主内容区 -->
+    <div class="container mx-auto px-4 py-6 flex flex-col md:flex-row gap-6">
+        <!-- 左侧边栏 -->
+        <aside class="w-full md:w-64 bg-white rounded-lg shadow-card p-4">
+            <nav>
+                <ul class="space-y-2">
+                    <li>
+                        <button data-step="upload" class="step-btn w-full flex items-center p-3 rounded-lg bg-primary text-white">
+                            <i class="fa fa-upload w-6"></i>
+                            <span>数据导入</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button data-step="village" class="step-btn w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all-300">
+                            <i class="fa fa-map-marker w-6"></i>
+                            <span>村庄选择</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button data-step="sample" class="step-btn w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all-300">
+                            <i class="fa fa-random w-6"></i>
+                            <span>抽样设置</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button data-step="result" class="step-btn w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all-300">
+                            <i class="fa fa-table w-6"></i>
+                            <span>结果展示</span>
+                        </button>
+                    </li>
+                    <li>
+                        <button data-step="visualization" class="step-btn w-full flex items-center p-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-all-300">
+                            <i class="fa fa-bar-chart w-6"></i>
+                            <span>数据可视化</span>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+            
+            <!-- 数据统计 -->
+            <div class="mt-8 p-4 bg-blue-50 rounded-lg">
+                <h3 class="font-semibold text-gray-700 mb-3">数据统计</h3>
+                <div class="space-y-2 text-sm">
+                    <div class="flex justify-between">
+                        <span>总患者数:</span>
+                        <span id="totalPatients" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>高血压患者:</span>
+                        <span id="hypertensionPatients" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>糖尿病患者:</span>
+                        <span id="diabetesPatients" class="font-medium">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>村庄数量:</span>
+                        <span id="villageCount" class="font-medium">0</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 右侧主内容 -->
+        <main class="flex-1">
+            <!-- 步骤内容区域 -->
+            <div class="bg-white rounded-lg shadow-card p-6">
+                <!-- 步骤标题 -->
+                <div class="mb-6 pb-3 border-b border-gray-200">
+                    <h2 id="stepTitle" class="text-xl font-bold text-gray-800">数据导入</h2>
+                    <p id="stepDescription" class="text-gray-600 mt-1">请上传包含患者信息的Excel或CSV文件</p>
+                </div>
+
+                <!-- 步骤内容 -->
+                <div id="stepContent">
+                    <!-- 步骤1: 数据导入 -->
+                    <div id="uploadStep" class="step-content">
+                        <div class="mb-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- 高血压患者数据上传 -->
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-2">
+                                            <i class="fa fa-heartbeat text-red-500"></i>
+                                        </div>
+                                        高血压患者数据
+                                    </h3>
+                                    <div id="hypertensionDropzone" class="dropzone rounded-lg p-6 text-center cursor-pointer">
+                                        <input type="file" id="hypertensionFileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                                        <i class="fa fa-cloud-upload text-3xl text-red-500 mb-3"></i>
+                                        <h4 class="font-medium text-gray-800 mb-2">拖拽文件到此处或点击上传</h4>
+                                        <p class="text-sm text-gray-500 mb-3">支持 Excel (.xlsx, .xls) 和 CSV 格式</p>
+                                        <p class="text-xs text-gray-400">
+                                            <i class="fa fa-info-circle mr-1"></i>
+                                            请确保文件包含以下表头: 档案号、姓名、性别、年龄、身份证号码、本人电话、联系人电话、联系电话、村(居委会)名称、现住址组、诊断日期、责任医生
+                                        </p>
+                                    </div>
+                                    <div id="hypertensionPreview" class="hidden mt-3">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                            <div class="flex items-start">
+                                                <i class="fa fa-check-circle text-green-500 text-lg mt-0.5 mr-2"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-green-800 text-sm">文件上传成功</h5>
+                                                    <p id="hypertensionFileName" class="text-xs text-green-700 mt-1"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- 糖尿病患者数据上传 -->
+                                <div>
+                                    <h3 class="text-lg font-medium text-gray-800 mb-3 flex items-center">
+                                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                                            <i class="fa fa-tint text-blue-500"></i>
+                                        </div>
+                                        糖尿病患者数据
+                                    </h3>
+                                    <div id="diabetesDropzone" class="dropzone rounded-lg p-6 text-center cursor-pointer">
+                                        <input type="file" id="diabetesFileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                                        <i class="fa fa-cloud-upload text-3xl text-blue-500 mb-3"></i>
+                                        <h4 class="font-medium text-gray-800 mb-2">拖拽文件到此处或点击上传</h4>
+                                        <p class="text-sm text-gray-500 mb-3">支持 Excel (.xlsx, .xls) 和 CSV 格式</p>
+                                        <p class="text-xs text-gray-400">
+                                            <i class="fa fa-info-circle mr-1"></i>
+                                            请确保文件包含以下表头: 档案号、姓名、性别、年龄、身份证号码、本人电话、联系人电话、联系电话、村(居委会)名称、现住址组、诊断日期、责任医生
+                                        </p>
+                                    </div>
+                                    <div id="diabetesPreview" class="hidden mt-3">
+                                        <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                            <div class="flex items-start">
+                                                <i class="fa fa-check-circle text-green-500 text-lg mt-0.5 mr-2"></i>
+                                                <div>
+                                                    <h5 class="font-medium text-green-800 text-sm">文件上传成功</h5>
+                                                    <p id="diabetesFileName" class="text-xs text-green-700 mt-1"></p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="uploadPreview" class="hidden">
+                            <div class="mb-6">
+                                <h3 class="font-medium text-gray-800 mb-3">数据预览</h3>
+                                <div class="overflow-x-auto scrollbar-thin">
+                                    <table id="previewTable" class="min-w-full border border-gray-200 text-sm">
+                                        <thead>
+                                            <tr class="bg-gray-100">
+                                                <th class="px-3 py-2 border border-gray-200">档案号</th>
+                                                <th class="px-3 py-2 border border-gray-200">姓名</th>
+                                                <th class="px-3 py-2 border border-gray-200">性别</th>
+                                                <th class="px-3 py-2 border border-gray-200">年龄</th>
+                                                <th class="px-3 py-2 border border-gray-200">村(居委会)名称</th>
+                                                <th class="px-3 py-2 border border-gray-200">诊断类型</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2">仅显示前5行数据</p>
+                            </div>
+                            
+                            <div class="flex justify-end">
+                                <button id="processDataBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all-300 flex items-center">
+                                    <i class="fa fa-check mr-2"></i> 确认并处理数据
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2: 村庄选择 -->
+                    <div id="villageStep" class="step-content hidden">
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium text-gray-800">选择村庄</h3>
+                                <div class="flex space-x-2">
+                                    <button id="selectAllVillages" class="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-blue-600 transition-all-300">
+                                        全选
+                                    </button>
+                                    <button id="deselectAllVillages" class="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-all-300">
+                                        取消全选
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
+                                <div id="villageList" class="space-y-2"></div>
+                            </div>
+                            
+                            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start">
+                                    <i class="fa fa-info-circle text-blue-500 text-xl mt-0.5 mr-3"></i>
+                                    <div>
+                                        <h4 class="font-medium text-blue-800">提示</h4>
+                                        <p class="text-sm text-blue-700 mt-1">
+                                            请选择需要抽样的村庄。系统将从每个选中的村庄中抽取指定数量的高血压和糖尿病患者档案。
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="backToUploadBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300 flex items-center">
+                                <i class="fa fa-arrow-left mr-2"></i> 返回
+                            </button>
+                            <button id="nextToSampleBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all-300 flex items-center">
+                                下一步 <i class="fa fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3: 抽样设置 -->
+                    <div id="sampleStep" class="step-content hidden">
+                        <div class="mb-6">
+                            <h3 class="font-medium text-gray-800 mb-4">抽样设置</h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-heartbeat text-red-500"></i>
+                                        </div>
+                                        <h4 class="font-medium text-gray-800">高血压患者抽样</h4>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label for="hypertensionSample" class="block text-sm text-gray-600 mb-1">抽样数量</label>
+                                        <div class="flex items-center">
+                                            <input type="number" id="hypertensionSample" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入抽样数量">
+                                        </div>
+                                        <p id="hypertensionInfo" class="text-xs text-gray-500 mt-1">从每个选中村庄抽取的高血压患者数量</p>
+                                    </div>
+                                    
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                                        <i class="fa fa-exclamation-circle mr-1"></i>
+                                        系统将从每个选中村庄中随机抽取指定数量的高血压患者档案
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <div class="flex items-center mb-4">
+                                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                            <i class="fa fa-tint text-blue-500"></i>
+                                        </div>
+                                        <h4 class="font-medium text-gray-800">糖尿病患者抽样</h4>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label for="diabetesSample" class="block text-sm text-gray-600 mb-1">抽样数量</label>
+                                        <div class="flex items-center">
+                                            <input type="number" id="diabetesSample" min="0" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入抽样数量">
+                                        </div>
+                                        <p id="diabetesInfo" class="text-xs text-gray-500 mt-1">从每个选中村庄抽取的糖尿病患者数量</p>
+                                    </div>
+                                    
+                                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                                        <i class="fa fa-exclamation-circle mr-1"></i>
+                                        系统将从每个选中村庄中随机抽取指定数量的糖尿病患者档案
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="backToVillageBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300 flex items-center">
+                                <i class="fa fa-arrow-left mr-2"></i> 返回
+                            </button>
+                            <button id="executeSampleBtn" class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-green-600 transition-all-300 flex items-center">
+                                <i class="fa fa-random mr-2"></i> 执行抽样
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4: 结果展示 -->
+                    <div id="resultStep" class="step-content hidden">
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="font-medium text-gray-800">抽样结果</h3>
+                                <div class="flex space-x-2">
+                                    <div class="relative">
+                                        <input type="text" id="resultSearch" placeholder="搜索患者姓名或档案号" class="px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                                        <i class="fa fa-search absolute right-3 top-2.5 text-gray-400"></i>
+                                    </div>
+                                    <button id="exportResultBtn" class="px-3 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all-300 flex items-center text-sm">
+                                        <i class="fa fa-download mr-1"></i> 导出结果
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                                <div class="flex items-start">
+                                    <i class="fa fa-check-circle text-green-500 text-xl mt-0.5 mr-3"></i>
+                                    <div>
+                                        <h4 class="font-medium text-green-800">抽样完成</h4>
+                                        <p class="text-sm text-green-700 mt-1">
+                                            已从 <span id="selectedVillageCount">0</span> 个村庄中抽取了 <span id="sampledHypertensionCount">0</span> 名高血压患者和 <span id="sampledDiabetesCount">0</span> 名糖尿病患者的档案
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto scrollbar-thin mb-4">
+                                <table id="resultTable" class="min-w-full border border-gray-200 text-sm data-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="px-3 py-2 border border-gray-200">档案号</th>
+                                            <th class="px-3 py-2 border border-gray-200">姓名</th>
+                                            <th class="px-3 py-2 border border-gray-200">性别</th>
+                                            <th class="px-3 py-2 border border-gray-200">年龄</th>
+                                            <th class="px-3 py-2 border border-gray-200">身份证号码</th>
+                                            <th class="px-3 py-2 border border-gray-200">本人电话</th>
+                                            <th class="px-3 py-2 border border-gray-200">村(居委会)名称</th>
+                                            <th class="px-3 py-2 border border-gray-200">现住址组</th>
+                                            <th class="px-3 py-2 border border-gray-200">诊断日期</th>
+                                            <th class="px-3 py-2 border border-gray-200">责任医生</th>
+                                            <th class="px-3 py-2 border border-gray-200">诊断类型</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            
+                            <div id="noResultsMessage" class="hidden text-center py-8">
+                                <i class="fa fa-search text-gray-300 text-4xl mb-3"></i>
+                                <p class="text-gray-500">没有找到匹配的结果</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="backToSampleBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300 flex items-center">
+                                <i class="fa fa-arrow-left mr-2"></i> 返回
+                            </button>
+                            <button id="viewVisualizationBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all-300 flex items-center">
+                                查看数据可视化 <i class="fa fa-arrow-right ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 步骤5: 数据可视化 -->
+                    <div id="visualizationStep" class="step-content hidden">
+                        <div class="mb-6">
+                            <h3 class="font-medium text-gray-800 mb-4">数据可视化</h3>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">疾病类型分布</h4>
+                                    <div class="h-64">
+                                        <canvas id="diseaseTypeChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">村庄患者数量分布</h4>
+                                    <div class="h-64">
+                                        <canvas id="villageDistributionChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">抽样前后对比</h4>
+                                    <div class="h-64">
+                                        <canvas id="sampleComparisonChart"></canvas>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                                    <h4 class="text-sm font-medium text-gray-700 mb-3">年龄分布</h4>
+                                    <div class="h-64">
+                                        <canvas id="ageDistributionChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-between">
+                            <button id="backToResultBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300 flex items-center">
+                                <i class="fa fa-arrow-left mr-2"></i> 返回
+                            </button>
+                            <button id="restartProcessBtn" class="px-4 py-2 bg-secondary text-white rounded-lg hover:bg-green-600 transition-all-300 flex items-center">
+                                <i class="fa fa-refresh mr-2"></i> 重新开始
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 帮助模态框 -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-gray-800">操作指引</h3>
+                    <button id="closeHelpBtn" class="text-gray-500 hover:text-gray-700">
+                        <i class="fa fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">1. 数据导入</h4>
+                        <p class="text-gray-600 text-sm">
+                            分别上传高血压和糖尿病患者信息的Excel或CSV文件。两个文件都必须包含以下表头：档案号、姓名、性别、年龄、身份证号码、本人电话、联系人电话、联系电话、村(居委会)名称、现住址组、诊断日期、责任医生。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">2. 村庄选择</h4>
+                        <p class="text-gray-600 text-sm">
+                            系统会从导入的数据中提取村庄列表。请选择需要抽样的村庄，可以选择一个或多个村庄。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">3. 抽样设置</h4>
+                        <p class="text-gray-600 text-sm">
+                            设置从每个选中村庄中抽取的高血压和糖尿病患者数量。系统会确保抽样数量不超过实际患者数量。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">4. 结果展示</h4>
+                        <p class="text-gray-600 text-sm">
+                            查看抽样结果，可以搜索特定患者，并可以将结果导出为Excel文件。
+                        </p>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-medium text-gray-800 mb-2">5. 数据可视化</h4>
+                        <p class="text-gray-600 text-sm">
+                            通过图表直观展示患者分布情况和抽样结果。包括疾病类型分布、村庄患者数量分布、抽样前后对比和年龄分布等。
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="mt-6 pt-4 border-t border-gray-200">
+                    <button id="closeHelpBtn2" class="w-full py-2 bg-primary text-white rounded-lg hover:bg-blue-600 transition-all-300">
+                        我知道了
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载中模态框 -->
+    <div id="loadingModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full text-center">
+            <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto mb-4"></div>
+            <h3 id="loadingTitle" class="text-lg font-medium text-gray-800 mb-2">正在处理数据</h3>
+            <p id="loadingMessage" class="text-gray-600 text-sm">请稍候，系统正在处理您的数据...</p>
+        </div>
+    </div>
+
+    <!-- 错误提示模态框 -->
+    <div id="errorModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <div class="flex items-start mb-4">
+                <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3 flex-shrink-0">
+                    <i class="fa fa-exclamation-triangle text-red-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-1">出现错误</h3>
+                    <p id="errorMessage" class="text-gray-600 text-sm">错误信息将显示在这里</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button id="closeErrorBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成功提示模态框 -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+            <div class="flex items-start mb-4">
+                <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3 flex-shrink-0">
+                    <i class="fa fa-check text-green-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-1">操作成功</h3>
+                    <p id="successMessage" class="text-gray-600 text-sm">成功信息将显示在这里</p>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <button id="closeSuccessBtn" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-all-300">
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let hypertensionData = [];
+        let diabetesData = [];
+        let patientData = []; // 合并后的数据
+        let villages = [];
+        let selectedVillages = [];
+        let sampleSettings = {
+            hypertensionSample: 0,
+            diabetesSample: 0
+        };
+        let sampleResults = [];
+        let charts = {};
+        let hypertensionFileUploaded = false;
+        let diabetesFileUploaded = false;
+        
+        // DOM 元素
+        const hypertensionDropzone = document.getElementById('hypertensionDropzone');
+        const diabetesDropzone = document.getElementById('diabetesDropzone');
+        const hypertensionFileInput = document.getElementById('hypertensionFileInput');
+        const diabetesFileInput = document.getElementById('diabetesFileInput');
+        const uploadPreview = document.getElementById('uploadPreview');
+        const hypertensionFileName = document.getElementById('hypertensionFileName');
+        const diabetesFileName = document.getElementById('diabetesFileName');
+        const previewTable = document.getElementById('previewTable');
+        const processDataBtn = document.getElementById('processDataBtn');
+        const hypertensionPreview = document.getElementById('hypertensionPreview');
+        const diabetesPreview = document.getElementById('diabetesPreview');
+        
+        const villageList = document.getElementById('villageList');
+        const selectAllVillages = document.getElementById('selectAllVillages');
+        const deselectAllVillages = document.getElementById('deselectAllVillages');
+        
+        const hypertensionSample = document.getElementById('hypertensionSample');
+        const diabetesSample = document.getElementById('diabetesSample');
+        const hypertensionInfo = document.getElementById('hypertensionInfo');
+        const diabetesInfo = document.getElementById('diabetesInfo');
+        
+        const resultTable = document.getElementById('resultTable');
+        const resultSearch = document.getElementById('resultSearch');
+        const exportResultBtn = document.getElementById('exportResultBtn');
+        const noResultsMessage = document.getElementById('noResultsMessage');
+        
+        const selectedVillageCount = document.getElementById('selectedVillageCount');
+        const sampledHypertensionCount = document.getElementById('sampledHypertensionCount');
+        const sampledDiabetesCount = document.getElementById('sampledDiabetesCount');
+        
+        const totalPatients = document.getElementById('totalPatients');
+        const hypertensionPatients = document.getElementById('hypertensionPatients');
+        const diabetesPatients = document.getElementById('diabetesPatients');
+        const villageCount = document.getElementById('villageCount');
+        
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const closeHelpBtn = document.getElementById('closeHelpBtn');
+        const closeHelpBtn2 = document.getElementById('closeHelpBtn2');
+        
+        const loadingModal = document.getElementById('loadingModal');
+        const loadingTitle = document.getElementById('loadingTitle');
+        const loadingMessage = document.getElementById('loadingMessage');
+        
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const closeErrorBtn = document.getElementById('closeErrorBtn');
+        
+        const successModal = document.getElementById('successModal');
+        const successMessage = document.getElementById('successMessage');
+        const closeSuccessBtn = document.getElementById('closeSuccessBtn');
+        
+        // 步骤切换
+        const stepBtns = document.querySelectorAll('.step-btn');
+        const stepContents = document.querySelectorAll('.step-content');
+        const stepTitle = document.getElementById('stepTitle');
+        const stepDescription = document.getElementById('stepDescription');
+        
+        // 步骤描述
+        const stepDescriptions = {
+            upload: '请上传包含患者信息的Excel或CSV文件',
+            village: '请选择需要抽样的村庄',
+            sample: '请设置抽样数量',
+            result: '查看抽样结果',
+            visualization: '数据可视化分析'
+        };
+        
+        // 步骤标题
+        const stepTitles = {
+            upload: '数据导入',
+            village: '村庄选择',
+            sample: '抽样设置',
+            result: '结果展示',
+            visualization: '数据可视化'
+        };
+        
+        // 初始化
+        function init() {
+            // 高血压数据上传
+            hypertensionDropzone.addEventListener('click', () => hypertensionFileInput.click());
+            hypertensionDropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                hypertensionDropzone.classList.add('active');
+            });
+            hypertensionDropzone.addEventListener('dragleave', () => {
+                hypertensionDropzone.classList.remove('active');
+            });
+            hypertensionDropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                hypertensionDropzone.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0], 'hypertension');
+                }
+            });
+            
+            hypertensionFileInput.addEventListener('change', () => {
+                if (hypertensionFileInput.files.length) {
+                    handleFile(hypertensionFileInput.files[0], 'hypertension');
+                }
+            });
+            
+            // 糖尿病数据上传
+            diabetesDropzone.addEventListener('click', () => diabetesFileInput.click());
+            diabetesDropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                diabetesDropzone.classList.add('active');
+            });
+            diabetesDropzone.addEventListener('dragleave', () => {
+                diabetesDropzone.classList.remove('active');
+            });
+            diabetesDropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                diabetesDropzone.classList.remove('active');
+                
+                if (e.dataTransfer.files.length) {
+                    handleFile(e.dataTransfer.files[0], 'diabetes');
+                }
+            });
+            
+            diabetesFileInput.addEventListener('change', () => {
+                if (diabetesFileInput.files.length) {
+                    handleFile(diabetesFileInput.files[0], 'diabetes');
+                }
+            });
+            
+            // 处理数据按钮
+            processDataBtn.addEventListener('click', processData);
+            
+            // 村庄选择
+            selectAllVillages.addEventListener('click', selectAllVillagesHandler);
+            deselectAllVillages.addEventListener('click', deselectAllVillagesHandler);
+            
+            // 抽样设置
+            hypertensionSample.addEventListener('input', updateSampleInfo);
+            diabetesSample.addEventListener('input', updateSampleInfo);
+            
+            // 结果搜索
+            resultSearch.addEventListener('input', filterResults);
+            
+            // 导出结果
+            exportResultBtn.addEventListener('click', exportResults);
+            
+            // 步骤切换
+            stepBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const step = btn.dataset.step;
+                    switchStep(step);
+                });
+            });
+            
+            // 导航按钮
+            document.getElementById('backToUploadBtn').addEventListener('click', () => switchStep('upload'));
+            document.getElementById('nextToSampleBtn').addEventListener('click', () => switchStep('sample'));
+            document.getElementById('backToVillageBtn').addEventListener('click', () => switchStep('village'));
+            document.getElementById('executeSampleBtn').addEventListener('click', executeSampling);
+            document.getElementById('backToSampleBtn').addEventListener('click', () => switchStep('sample'));
+            document.getElementById('viewVisualizationBtn').addEventListener('click', () => switchStep('visualization'));
+            document.getElementById('backToResultBtn').addEventListener('click', () => switchStep('result'));
+            document.getElementById('restartProcessBtn').addEventListener('click', restartProcess);
+            
+            // 帮助模态框
+            helpBtn.addEventListener('click', () => helpModal.classList.remove('hidden'));
+            closeHelpBtn.addEventListener('click', () => helpModal.classList.add('hidden'));
+            closeHelpBtn2.addEventListener('click', () => helpModal.classList.add('hidden'));
+            
+            // 错误模态框
+            closeErrorBtn.addEventListener('click', () => errorModal.classList.add('hidden'));
+            
+            // 成功模态框
+            closeSuccessBtn.addEventListener('click', () => successModal.classList.add('hidden'));
+        }
+        
+        // 处理上传的文件
+        function handleFile(file, diseaseType) {
+            if (!file.name.match(/\.(xlsx|xls|csv)$/)) {
+                showError('请上传Excel或CSV格式的文件');
+                return;
+            }
+            
+            // 显示文件名和预览
+            if (diseaseType === 'hypertension') {
+                hypertensionFileName.textContent = file.name;
+                hypertensionPreview.classList.remove('hidden');
+                hypertensionFileUploaded = true;
+            } else {
+                diabetesFileName.textContent = file.name;
+                diabetesPreview.classList.remove('hidden');
+                diabetesFileUploaded = true;
+            }
+            
+            // 如果两个文件都上传了，显示合并预览
+            if (hypertensionFileUploaded && diabetesFileUploaded) {
+                uploadPreview.classList.remove('hidden');
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    // 转换为JSON
+                    const fileData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    // 验证数据
+                    if (fileData.length === 0) {
+                        showError('文件中没有数据');
+                        return;
+                    }
+                    
+                    // 检查必要的列
+                    const requiredColumns = ['档案号', '姓名', '性别', '年龄', '身份证号码', '本人电话', '联系人电话', '联系电话', '村(居委会)名称', '现住址组', '诊断日期', '责任医生'];
+                    const missingColumns = requiredColumns.filter(col => !fileData[0].hasOwnProperty(col));
+                    
+                    if (missingColumns.length > 0) {
+                        showError(`文件缺少必要的列: ${missingColumns.join(', ')}`);
+                        return;
+                    }
+                    
+                    // 为数据添加疾病类型
+                    fileData.forEach(row => {
+                        row.diagnosisType = diseaseType === 'hypertension' ? '高血压' : '糖尿病';
+                    });
+                    
+                    // 保存数据
+                    if (diseaseType === 'hypertension') {
+                        hypertensionData = fileData;
+                    } else {
+                        diabetesData = fileData;
+                    }
+                    
+                    // 如果两个文件都上传了，显示合并预览
+                    if (hypertensionFileUploaded && diabetesFileUploaded) {
+                        // 合并数据
+                        patientData = [...hypertensionData, ...diabetesData];
+                        displayPreview();
+                    }
+                    
+                } catch (error) {
+                    showError('文件解析失败: ' + error.message);
+                }
+            };
+            
+            reader.onerror = function() {
+                showError('文件读取失败');
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // 显示数据预览
+        function displayPreview() {
+            // 从每个疾病类型中取前几条数据进行预览
+            const hypertensionPreviewData = hypertensionData.slice(0, 3);
+            const diabetesPreviewData = diabetesData.slice(0, 3);
+            const previewData = [...hypertensionPreviewData, ...diabetesPreviewData];
+            
+            const tbody = previewTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            previewData.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td class="px-3 py-2 border border-gray-200">${row['档案号'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['姓名'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['性别'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['年龄'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['村(居委会)名称'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row.diagnosisType || ''}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 处理数据
+        function processData() {
+            // 检查是否两个文件都已上传
+            if (!hypertensionFileUploaded || !diabetesFileUploaded) {
+                showError('请上传高血压和糖尿病患者数据文件');
+                return;
+            }
+            
+            showLoading('正在处理数据', '请稍候，系统正在处理您的数据...');
+            
+            // 模拟处理延迟
+            setTimeout(() => {
+                try {
+                    // 合并数据
+                    patientData = [...hypertensionData, ...diabetesData];
+                    
+                    // 提取村庄列表
+                    const villageSet = new Set();
+                    patientData.forEach(row => {
+                        if (row['村(居委会)名称']) {
+                            villageSet.add(row['村(居委会)名称']);
+                        }
+                    });
+                    
+                    villages = Array.from(villageSet).map(name => {
+                        const hypertensionCount = patientData.filter(row => 
+                            row['村(居委会)名称'] === name && row.diagnosisType === '高血压'
+                        ).length;
+                        
+                        const diabetesCount = patientData.filter(row => 
+                            row['村(居委会)名称'] === name && row.diagnosisType === '糖尿病'
+                        ).length;
+                        
+                        return {
+                            name,
+                            hypertensionCount,
+                            diabetesCount,
+                            selected: false
+                        };
+                    });
+                    
+                    // 更新统计信息
+                    updateStatistics();
+                    
+                    // 显示村庄选择
+                    displayVillages();
+                    
+                    // 切换到村庄选择步骤
+                    switchStep('village');
+                    
+                    hideLoading();
+                    
+                } catch (error) {
+                    hideLoading();
+                    showError('数据处理失败: ' + error.message);
+                }
+            }, 1000);
+        }
+        
+        // 更新统计信息
+        function updateStatistics() {
+            const total = patientData.length;
+            const hypertension = patientData.filter(row => row.diagnosisType === '高血压').length;
+            const diabetes = patientData.filter(row => row.diagnosisType === '糖尿病').length;
+            const villageTotal = villages.length;
+            
+            totalPatients.textContent = total;
+            hypertensionPatients.textContent = hypertension;
+            diabetesPatients.textContent = diabetes;
+            villageCount.textContent = villageTotal;
+        }
+        
+        // 显示村庄列表
+        function displayVillages() {
+            villageList.innerHTML = '';
+            
+            villages.forEach(village => {
+                const villageItem = document.createElement('div');
+                villageItem.className = 'flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-all-300';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'w-4 h-4 text-primary focus:ring-primary border-gray-300 rounded';
+                checkbox.checked = village.selected;
+                checkbox.addEventListener('change', () => {
+                    village.selected = checkbox.checked;
+                    updateSelectedVillages();
+                });
+                
+                const villageInfo = document.createElement('div');
+                villageInfo.className = 'ml-3 flex-1';
+                
+                const villageName = document.createElement('div');
+                villageName.className = 'text-sm font-medium text-gray-800';
+                villageName.textContent = village.name;
+                
+                const patientCount = document.createElement('div');
+                patientCount.className = 'text-xs text-gray-500';
+                patientCount.textContent = `高血压: ${village.hypertensionCount}, 糖尿病: ${village.diabetesCount}`;
+                
+                villageInfo.appendChild(villageName);
+                villageInfo.appendChild(patientCount);
+                
+                villageItem.appendChild(checkbox);
+                villageItem.appendChild(villageInfo);
+                
+                villageList.appendChild(villageItem);
+            });
+        }
+        
+        // 全选村庄
+        function selectAllVillagesHandler() {
+            villages.forEach(village => {
+                village.selected = true;
+            });
+            
+            displayVillages();
+            updateSelectedVillages();
+        }
+        
+        // 取消全选村庄
+        function deselectAllVillagesHandler() {
+            villages.forEach(village => {
+                village.selected = false;
+            });
+            
+            displayVillages();
+            updateSelectedVillages();
+        }
+        
+        // 更新选中的村庄
+        function updateSelectedVillages() {
+            selectedVillages = villages.filter(village => village.selected).map(village => village.name);
+        }
+        
+        // 更新抽样信息
+        function updateSampleInfo() {
+            const hypertensionCount = parseInt(hypertensionSample.value) || 0;
+            const diabetesCount = parseInt(diabetesSample.value) || 0;
+            
+            sampleSettings.hypertensionSample = hypertensionCount;
+            sampleSettings.diabetesSample = diabetesCount;
+            
+            // 更新提示信息
+            hypertensionInfo.textContent = `从每个选中村庄抽取的高血压患者数量 (最大: ${Math.min(...villages.filter(v => v.selected).map(v => v.hypertensionCount)) || 0})`;
+            diabetesInfo.textContent = `从每个选中村庄抽取的糖尿病患者数量 (最大: ${Math.min(...villages.filter(v => v.selected).map(v => v.diabetesCount)) || 0})`;
+        }
+        
+        // 执行抽样
+        function executeSampling() {
+            showLoading('正在执行抽样', '请稍候，系统正在随机抽取患者档案...');
+            
+            // 获取抽样设置
+            const hypertensionCount = parseInt(hypertensionSample.value) || 0;
+            const diabetesCount = parseInt(diabetesSample.value) || 0;
+            
+            if (hypertensionCount === 0 && diabetesCount === 0) {
+                hideLoading();
+                showError('请至少设置一种疾病类型的抽样数量');
+                return;
+            }
+            
+            if (selectedVillages.length === 0) {
+                hideLoading();
+                showError('请至少选择一个村庄');
+                return;
+            }
+            
+            // 模拟处理延迟
+            setTimeout(() => {
+                try {
+                    sampleResults = [];
+                    
+                    // 从每个选中的村庄抽取患者
+                    selectedVillages.forEach(villageName => {
+                        // 获取该村庄的患者
+                        const villagePatients = patientData.filter(row => row['村(居委会)名称'] === villageName);
+                        
+                        // 抽取高血压患者
+                        if (hypertensionCount > 0) {
+                            const hypertensionPatients = villagePatients.filter(row => row.diagnosisType === '高血压');
+                            const sampledHypertension = sampleFromArray(hypertensionPatients, hypertensionCount);
+                            sampleResults.push(...sampledHypertension);
+                        }
+                        
+                        // 抽取糖尿病患者
+                        if (diabetesCount > 0) {
+                            const diabetesPatients = villagePatients.filter(row => row.diagnosisType === '糖尿病');
+                            const sampledDiabetes = sampleFromArray(diabetesPatients, diabetesCount);
+                            sampleResults.push(...sampledDiabetes);
+                        }
+                    });
+                    
+                    // 更新结果统计
+                    selectedVillageCount.textContent = selectedVillages.length;
+                    sampledHypertensionCount.textContent = sampleResults.filter(row => row.diagnosisType === '高血压').length;
+                    sampledDiabetesCount.textContent = sampleResults.filter(row => row.diagnosisType === '糖尿病').length;
+                    
+                    // 显示结果
+                    displayResults();
+                    
+                    // 切换到结果展示步骤
+                    switchStep('result');
+                    
+                    hideLoading();
+                    
+                } catch (error) {
+                    hideLoading();
+                    showError('抽样执行失败: ' + error.message);
+                }
+            }, 1500);
+        }
+        
+        // 随机抽样算法
+        function sampleFromArray(array, count) {
+            if (count >= array.length) return [...array];
+            
+            // Fisher-Yates 洗牌算法
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            
+            return shuffled.slice(0, count);
+        }
+        
+        // 显示抽样结果
+        function displayResults() {
+            const tbody = resultTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (sampleResults.length === 0) {
+                noResultsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noResultsMessage.classList.add('hidden');
+            
+            sampleResults.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all-300';
+                
+                tr.innerHTML = `
+                    <td class="px-3 py-2 border border-gray-200">${row['档案号'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['姓名'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['性别'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['年龄'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['身份证号码'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['本人电话'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['村(居委会)名称'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['现住址组'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['诊断日期'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['责任医生'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row.diagnosisType || ''}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 过滤结果
+        function filterResults() {
+            const searchTerm = resultSearch.value.toLowerCase();
+            
+            if (!searchTerm) {
+                displayResults();
+                return;
+            }
+            
+            const filteredResults = sampleResults.filter(row => 
+                (row['姓名'] && row['姓名'].toLowerCase().includes(searchTerm)) ||
+                (row['档案号'] && row['档案号'].toLowerCase().includes(searchTerm))
+            );
+            
+            const tbody = resultTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            if (filteredResults.length === 0) {
+                noResultsMessage.classList.remove('hidden');
+                return;
+            }
+            
+            noResultsMessage.classList.add('hidden');
+            
+            filteredResults.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-all-300';
+                
+                tr.innerHTML = `
+                    <td class="px-3 py-2 border border-gray-200">${row['档案号'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['姓名'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['性别'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['年龄'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['身份证号码'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['本人电话'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['村(居委会)名称'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['现住址组'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['诊断日期'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row['责任医生'] || ''}</td>
+                    <td class="px-3 py-2 border border-gray-200">${row.diagnosisType || ''}</td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 导出结果
+        function exportResults() {
+            if (sampleResults.length === 0) {
+                showError('没有可导出的结果');
+                return;
+            }
+            
+            try {
+                // 创建工作簿
+                const workbook = XLSX.utils.book_new();
+                
+                // 准备导出数据
+                const exportData = sampleResults.map(row => ({
+                    '档案号': row['档案号'] || '',
+                    '姓名': row['姓名'] || '',
+                    '性别': row['性别'] || '',
+                    '年龄': row['年龄'] || '',
+                    '身份证号码': row['身份证号码'] || '',
+                    '本人电话': row['本人电话'] || '',
+                    '联系人电话': row['联系人电话'] || '',
+                    '联系电话': row['联系电话'] || '',
+                    '村(居委会)名称': row['村(居委会)名称'] || '',
+                    '现住址组': row['现住址组'] || '',
+                    '诊断日期': row['诊断日期'] || '',
+                    '责任医生': row['责任医生'] || '',
+                    '诊断类型': row.diagnosisType || ''
+                }));
+                
+                // 创建工作表
+                const worksheet = XLSX.utils.json_to_sheet(exportData);
+                
+                // 添加工作表到工作簿
+                XLSX.utils.book_append_sheet(workbook, worksheet, '抽样结果');
+                
+                // 导出文件
+                const fileName = `医疗健康档案抽样结果_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                XLSX.writeFile(workbook, fileName);
+                
+                showSuccess('导出成功', `抽样结果已成功导出为 ${fileName}`);
+                
+            } catch (error) {
+                showError('导出失败: ' + error.message);
+            }
+        }
+        
+        // 切换步骤
+        function switchStep(step) {
+            // 更新步骤按钮样式
+            stepBtns.forEach(btn => {
+                if (btn.dataset.step === step) {
+                    btn.classList.remove('text-gray-700', 'hover:bg-gray-100');
+                    btn.classList.add('bg-primary', 'text-white');
+                } else {
+                    btn.classList.remove('bg-primary', 'text-white');
+                    btn.classList.add('text-gray-700', 'hover:bg-gray-100');
+                }
+            });
+            
+            // 更新步骤内容
+            stepContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById(`${step}Step`).classList.remove('hidden');
+            
+            // 更新步骤标题和描述
+            stepTitle.textContent = stepTitles[step];
+            stepDescription.textContent = stepDescriptions[step];
+            
+            // 如果切换到抽样设置步骤，更新抽样信息
+            if (step === 'sample') {
+                updateSampleInfo();
+            }
+            
+            // 如果切换到数据可视化步骤，初始化图表
+            if (step === 'visualization') {
+                initCharts();
+            }
+        }
+        
+        // 初始化图表
+        function initCharts() {
+            // 疾病类型分布图表
+            const diseaseTypeCtx = document.getElementById('diseaseTypeChart').getContext('2d');
+            if (charts.diseaseType) {
+                charts.diseaseType.destroy();
+            }
+            
+            const hypertensionCount = patientData.filter(row => row.diagnosisType === '高血压').length;
+            const diabetesCount = patientData.filter(row => row.diagnosisType === '糖尿病').length;
+            
+            charts.diseaseType = new Chart(diseaseTypeCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['高血压', '糖尿病'],
+                    datasets: [{
+                        data: [hypertensionCount, diabetesCount],
+                        backgroundColor: ['#f44336', '#2196f3'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+            
+            // 村庄患者数量分布图表
+            const villageDistributionCtx = document.getElementById('villageDistributionChart').getContext('2d');
+            if (charts.villageDistribution) {
+                charts.villageDistribution.destroy();
+            }
+            
+            const villageNames = villages.map(village => village.name);
+            const villagePatientCounts = villages.map(village => village.hypertensionCount + village.diabetesCount);
+            
+            charts.villageDistribution = new Chart(villageDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: villageNames,
+                    datasets: [{
+                        label: '患者数量',
+                        data: villagePatientCounts,
+                        backgroundColor: '#1e88e5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // 抽样前后对比图表
+            const sampleComparisonCtx = document.getElementById('sampleComparisonChart').getContext('2d');
+            if (charts.sampleComparison) {
+                charts.sampleComparison.destroy();
+            }
+            
+            const sampledHypertensionCount = sampleResults.filter(row => row.diagnosisType === '高血压').length;
+            const sampledDiabetesCount = sampleResults.filter(row => row.diagnosisType === '糖尿病').length;
+            
+            charts.sampleComparison = new Chart(sampleComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['高血压', '糖尿病'],
+                    datasets: [
+                        {
+                            label: '抽样前',
+                            data: [hypertensionCount, diabetesCount],
+                            backgroundColor: '#90caf9',
+                            borderWidth: 1
+                        },
+                        {
+                            label: '抽样后',
+                            data: [sampledHypertensionCount, sampledDiabetesCount],
+                            backgroundColor: '#1e88e5',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            
+            // 年龄分布图表
+            const ageDistributionCtx = document.getElementById('ageDistributionChart').getContext('2d');
+            if (charts.ageDistribution) {
+                charts.ageDistribution.destroy();
+            }
+            
+            // 计算年龄分布
+            const ageRanges = {
+                '0-20': 0,
+                '21-40': 0,
+                '41-60': 0,
+                '61-80': 0,
+                '81+': 0
+            };
+            
+            patientData.forEach(row => {
+                const age = parseInt(row['年龄']) || 0;
+                
+                if (age <= 20) {
+                    ageRanges['0-20']++;
+                } else if (age <= 40) {
+                    ageRanges['21-40']++;
+                } else if (age <= 60) {
+                    ageRanges['41-60']++;
+                } else if (age <= 80) {
+                    ageRanges['61-80']++;
+                } else {
+                    ageRanges['81+']++;
+                }
+            });
+            
+            charts.ageDistribution = new Chart(ageDistributionCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ageRanges),
+                    datasets: [{
+                        label: '患者数量',
+                        data: Object.values(ageRanges),
+                        backgroundColor: '#4caf50',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // 重新开始
+        function restartProcess() {
+            // 重置全局变量
+            hypertensionData = [];
+            diabetesData = [];
+            patientData = [];
+            villages = [];
+            selectedVillages = [];
+            sampleSettings = {
+                hypertensionSample: 0,
+                diabetesSample: 0
+            };
+            sampleResults = [];
+            hypertensionFileUploaded = false;
+            diabetesFileUploaded = false;
+            
+            // 重置表单
+            hypertensionFileInput.value = '';
+            diabetesFileInput.value = '';
+            hypertensionPreview.classList.add('hidden');
+            diabetesPreview.classList.add('hidden');
+            uploadPreview.classList.add('hidden');
+            hypertensionSample.value = '';
+            diabetesSample.value = '';
+            resultSearch.value = '';
+            
+            // 重置统计信息
+            totalPatients.textContent = '0';
+            hypertensionPatients.textContent = '0';
+            diabetesPatients.textContent = '0';
+            villageCount.textContent = '0';
+            
+            // 切换到数据导入步骤
+            switchStep('upload');
+            
+            // 销毁图表
+            Object.values(charts).forEach(chart => {
+                if (chart) {
+                    chart.destroy();
+                }
+            });
+            charts = {};
+        }
+        
+        // 显示加载中模态框
+        function showLoading(title, message) {
+            loadingTitle.textContent = title;
+            loadingMessage.textContent = message;
+            loadingModal.classList.remove('hidden');
+        }
+        
+        // 隐藏加载中模态框
+        function hideLoading() {
+            loadingModal.classList.add('hidden');
+        }
+        
+        // 显示错误模态框
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorModal.classList.remove('hidden');
+        }
+        
+        // 显示成功模态框
+        function showSuccess(title, message) {
+            successMessage.textContent = message;
+            successModal.classList.remove('hidden');
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
