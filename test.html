@@ -1,367 +1,962 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智慧扫描 - H5文档扫描仪</title>
-  <script src="https://raw.githubusercontent.com/cnqm/cnqm.github.io/refs/heads/main/opencv.js" onload="onOpenCvReady();"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: #000;
-      color: #fff;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #app {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-    .header {
-      height: 44px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 16px;
-      font-weight: 500;
-      position: relative;
-    }
-    .header .btn-close {
-      position: absolute;
-      left: 16px;
-      background: none;
-      border: none;
-      color: #fff;
-      font-size: 14px;
-    }
-    .preview-container {
-      flex: 1;
-      position: relative;
-      overflow: hidden;
-    }
-    #videoPreview {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .scan-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-    }
-    .scan-frame {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80%;
-      height: 60%;
-      border: 2px solid transparent;
-      border-radius: 4px;
-      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
-      transition: border-color 0.3s ease;
-    }
-    .scan-frame.active {
-      border-color: #ff8c00;
-    }
-    .scan-corner {
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      border-color: #ff8c00;
-      border-style: solid;
-    }
-    .corner-tl {
-      top: -2px;
-      left: -2px;
-      border-width: 2px 0 0 2px;
-    }
-    .corner-tr {
-      top: -2px;
-      right: -2px;
-      border-width: 2px 2px 0 0;
-    }
-    .corner-bl {
-      bottom: -2px;
-      left: -2px;
-      border-width: 0 0 2px 2px;
-    }
-    .corner-br {
-      bottom: -2px;
-      right: -2px;
-      border-width: 0 2px 2px 0;
-    }
-    .scan-line {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 3px;
-          background: linear-gradient(to bottom, rgba(255, 140, 0, 0.8), rgba(255, 140, 0, 0.2));
-      animation: scan 2s linear infinite;
-      display: none;
-    }
-    .scan-frame.active + .scan-line {
-      display: block;
-    }
-    @keyframes scan {
-      0% { top: 0; opacity: 0.8; }
-      50% { opacity: 1; }
-      100% { top: 100%; opacity: 0.8; }
-    }
-    .footer {
-      height: 120px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 16px;
-      padding: 16px 0;
-    }
-    .btn-row {
-      display: flex;
-      gap: 40px;
-    }
-    .btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      border: 2px solid #fff;
-      background: transparent;
-      color: #fff;
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .btn-capture {
-      background: #fff;
-      color: #000;
-    }
-    .btn-icon {
-      font-size: 24px;
-    }
-    .tips {
-      font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
-    }
-    #status {
-      position: absolute;
-      top: 10px;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      color: #ff8c00;
-      font-size: 14px;
-    }
-    #resultCanvas {
-      display: none;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>老年人体检照片自动命名工具</title>
+    <!-- Tailwind CSS v3 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- 统一的 Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        secondary: '#60a5fa',
+                        accent: '#2563eb',
+                        success: '#10b981',
+                        warning: '#f59e0b',
+                        danger: '#ef4444',
+                        light: '#f3f4f6',
+                        dark: '#1f2937'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-success': 'pulse-success 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        'pulse-success': {
+                            '0%, 100%': {
+                                backgroundColor: '#10b981',
+                            },
+                            '50%': {
+                                backgroundColor: '#34d399',
+                            },
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .glass-effect {
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                border: 1px solid rgba(255, 255, 255, 0.18);
+            }
+            .card-shadow {
+                box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+            }
+            .btn-shadow {
+                box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            }
+            .btn-shadow:hover {
+                box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+            }
+            .item-selected {
+                border-color: #3b82f6;
+                background-color: rgba(59, 130, 246, 0.1);
+            }
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #c1c1c1;
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #a1a1a1;
+            }
+        }
+    </style>
 </head>
-<body>
-  <div id="app">
-    <div class="header">
-      <button class="btn-close">取消</button>
-      <span>文档扫描</span>
-    </div>
-    <div class="preview-container">
-      <video id="videoPreview" autoplay playsinline></video>
-      <div class="scan-overlay">
-        <div class="scan-frame" id="scanFrame">
-          <div class="scan-corner corner-tl"></div>
-          <div class="scan-corner corner-tr"></div>
-          <div class="scan-corner corner-bl"></div>
-          <div class="scan-corner corner-br"></div>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 顶部导航栏 -->
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa fa-heartbeat text-primary text-2xl"></i>
+                <h1 class="text-xl font-bold text-gray-800">老年人体检照片自动命名工具</h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <button id="helpBtn" class="text-gray-600 hover:text-primary transition-colors">
+                    <i class="fa fa-question-circle text-lg"></i>
+                </button>
+                <button id="settingsBtn" class="text-gray-600 hover:text-primary transition-colors">
+                    <i class="fa fa-cog text-lg"></i>
+                </button>
+            </div>
         </div>
-        <div class="scan-line"></div>
-      </div>
-      <div id="status">正在检测文档边缘...</div>
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main class="container mx-auto px-4 py-6">
+        <!-- 模式选择 -->
+        <div class="flex justify-center mb-8">
+            <div class="bg-white rounded-full p-1 shadow-sm inline-flex">
+                <button id="singleModeBtn" class="px-6 py-2 rounded-full text-sm font-medium bg-primary text-white">
+                    单人体检模式
+                </button>
+                <button id="batchModeBtn" class="px-6 py-2 rounded-full text-sm font-medium text-gray-600 hover:text-primary">
+                    批量体检模式
+                </button>
+            </div>
+        </div>
+
+        <!-- 单人体检模式 -->
+        <div id="singleMode" class="space-y-6">
+            <!-- 基本信息录入 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-user-circle text-primary mr-2"></i>
+                    基本信息
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="idNumber" class="block text-sm font-medium text-gray-700 mb-1">编号</label>
+                        <input type="text" id="idNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="请输入体检编号，如：101">
+                    </div>
+                    <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
+                        <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="请输入姓名，如：张三">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 体检项目选择 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-list-alt text-primary mr-2"></i>
+                    体检项目选择
+                </h2>
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- 抽血 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1805157901170245641~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=sHW3WsOLO%2FdYsCMnX9H%2BywoU4Lo%3D" alt="抽血" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">抽血</span>
+                    </div>
+                    <!-- B超检查 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/0f5e5325089d76040d097b86c67122e2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=BWQsiGLJNpMweoQ8it%2BfF7OlLRg%3D" alt="B超检查" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">B超检查</span>
+                    </div>
+                    <!-- 血常规 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/image/8d0a55a83ca664150796eb5f80f94015~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=RODmIPTq7sF4fkqAY5X78nkslX8%3D" alt="血常规" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">血常规</span>
+                    </div>
+                    <!-- 血生化 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2323205225551364107~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=kS2nX7fiUND1YdjFfJKeERWDxxA%3D" alt="血生化" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">血生化</span>
+                    </div>
+                    <!-- 糖化血红蛋白 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2053406993631805450~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=5%2BsHZ%2BWbySZMp%2BnnJEcGfS1n9nA%3D" alt="糖化血红蛋白" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">糖化血红蛋白</span>
+                    </div>
+                    <!-- 尿常规 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/29628a4acd455071a326c4a928a06bda~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780599&x-signature=ppHlCiEQp6Lp9MUwelfrH4PPkfw%3D" alt="尿常规" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">尿常规</span>
+                    </div>
+                    <!-- 胸片 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/56a28cca8b406a448f50883a51f483ab~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780599&x-signature=kkXIZDSjvGRNxQ%2F89ANd2pZ5k70%3D" alt="胸片" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">胸片</span>
+                    </div>
+                    <!-- 心电图 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/b54a1ccf4f08fca6ad072aeb7cc59a2d~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=8gPy058%2BYCz%2B7at4vrLi7rOy27w%3D" alt="心电图" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">心电图</span>
+                    </div>
+                    <!-- B超单 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/b85501903a36a19545ffb10f8273574f~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=WMTD1hKLRUbe3xKFbnxIbsPcNvA%3D" alt="B超单" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">B超单</span>
+                    </div>
+                    <!-- 血压 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1621885126830587909~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780607&x-signature=9Z5kuKlJYrICVT0uvZvyEcR6eSk%3D" alt="血压" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">血压</span>
+                    </div>
+                    <!-- 足背动脉 -->
+                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/44a4f563908601d7f616475221d411f7~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=1jV7Jn74j4QxZb3l6m0g%2FwH9kP5aF2tE" alt="足背动脉" class="w-12 h-12 mx-auto mb-2">
+                        <span class="text-sm font-medium">足背动脉</span>
+                    </div>
+                    <!-- 自定义项目 -->
+                    <div class="examination-item border border-dashed border-gray-300 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center bg-gray-100 rounded-full">
+                            <i class="fa fa-plus text-gray-500 text-xl"></i>
+                        </div>
+                        <span class="text-sm font-medium text-gray-500">自定义项目</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 拍照区域 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-camera text-primary mr-2"></i>
+                    拍照区域
+                </h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- 预览区域 -->
+                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center min-h-[300px]">
+                        <div id="previewArea" class="w-full h-full flex flex-col items-center justify-center">
+                            <i class="fa fa-image text-gray-400 text-5xl mb-3"></i>
+                            <p class="text-gray-500 text-center">选择体检项目后点击下方按钮拍照</p>
+                            <p id="selectedItemDisplay" class="mt-2 text-primary font-medium hidden"></p>
+                        </div>
+                        <img id="previewImage" class="w-full h-full object-contain hidden" alt="预览图片">
+                    </div>
+                    
+                    <!-- 操作区域 -->
+                    <div class="md:w-64 flex flex-col gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-sm font-medium text-gray-700 mb-2">当前设置</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">编号:</span>
+                                    <span id="currentId" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">姓名:</span>
+                                    <span id="currentName" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">项目:</span>
+                                    <span id="currentItem" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">生成文件名:</span>
+                                    <span id="generatedFilename" class="font-medium text-primary truncate">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button id="captureBtn" class="w-full bg-primary hover:bg-accent text-white font-medium py-3 px-4 rounded-lg transition-all btn-shadow flex items-center justify-center">
+                                <i class="fa fa-camera mr-2"></i>
+                                拍照
+                            </button>
+                            <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all hidden">
+                                重新拍照
+                            </button>
+                            <button id="saveBtn" class="w-full bg-success hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all hidden">
+                                保存照片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 已拍摄照片列表 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-th-large text-primary mr-2"></i>
+                    已拍摄照片
+                </h2>
+                <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- 照片将在这里动态添加 -->
+                    <div class="text-center text-gray-500 py-8 col-span-full">
+                        <i class="fa fa-picture-o text-4xl mb-2"></i>
+                        <p>暂无拍摄照片</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 批量体检模式 (默认隐藏) -->
+        <div id="batchMode" class="space-y-6 hidden">
+            <!-- 批量信息导入 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-users text-primary mr-2"></i>
+                    批量信息导入
+                </h2>
+                <div class="space-y-4">
+                    <div class="border border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <i class="fa fa-upload text-gray-400 text-4xl mb-3"></i>
+                        <p class="text-gray-600 mb-2">上传Excel文件批量导入体检人员信息</p>
+                        <p class="text-sm text-gray-500 mb-4">支持 .xlsx 格式，包含编号和姓名列</p>
+                        <button class="bg-primary hover:bg-accent text-white font-medium py-2 px-6 rounded-lg transition-all btn-shadow">
+                            选择文件
+                        </button>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-medium text-gray-700 mb-2">或手动添加</h3>
+                        <div class="flex gap-3">
+                            <input type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="编号">
+                            <input type="text" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="姓名">
+                            <button class="bg-primary hover:bg-accent text-white font-medium py-2 px-4 rounded-lg transition-all btn-shadow">
+                                添加
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 批量人员列表 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-list text-primary mr-2"></i>
+                    体检人员列表
+                </h2>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead>
+                            <tr>
+                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">编号</th>
+                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th class="px-4 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <!-- 示例行 -->
+                            <tr>
+                                <td class="px-4 py-3 whitespace-nowrap">101</td>
+                                <td class="px-4 py-3 whitespace-nowrap">张三</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        已完成
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-accent">查看</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 whitespace-nowrap">102</td>
+                                <td class="px-4 py-3 whitespace-nowrap">李四</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        进行中
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-accent">继续</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="px-4 py-3 whitespace-nowrap">103</td>
+                                <td class="px-4 py-3 whitespace-nowrap">王五</td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        未开始
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                    <button class="text-primary hover:text-accent">开始</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 批量拍摄界面 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fa fa-camera text-primary mr-2"></i>
+                        批量拍摄
+                    </h2>
+                    <div class="text-sm text-gray-600">
+                        当前: <span class="font-medium text-primary">102-李四</span>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- 批量预览区域 -->
+                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center min-h-[300px]">
+                        <div class="w-full h-full flex flex-col items-center justify-center">
+                            <i class="fa fa-image text-gray-400 text-5xl mb-3"></i>
+                            <p class="text-gray-500 text-center">选择体检项目后点击下方按钮拍照</p>
+                        </div>
+                    </div>
+                    
+                    <!-- 批量操作区域 -->
+                    <div class="md:w-80">
+                        <!-- 项目选择 -->
+                        <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                            <h3 class="text-sm font-medium text-gray-700 mb-2">快速选择项目</h3>
+                            <div class="grid grid-cols-3 gap-2">
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">抽血</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">B超</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">血常规</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">心电图</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">血压</button>
+                                <button class="px-2 py-1 text-xs border border-gray-300 rounded hover:border-primary hover:text-primary">更多</button>
+                            </div>
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div class="space-y-3">
+                            <button class="w-full bg-primary hover:bg-accent text-white font-medium py-3 px-4 rounded-lg transition-all btn-shadow flex items-center justify-center">
+                                <i class="fa fa-camera mr-2"></i>
+                                拍照
+                            </button>
+                            <div class="flex gap-3">
+                                <button class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition-all">
+                                    上一人
+                                </button>
+                                <button class="flex-1 bg-success hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-all">
+                                    下一人
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部信息 -->
+    <footer class="bg-white border-t border-gray-200 py-4 mt-8">
+        <div class="container mx-auto px-4 text-center text-sm text-gray-600">
+            <p>老年人体检照片自动命名工具 © 2025</p>
+        </div>
+    </footer>
+
+    <!-- 自定义项目模态框 -->
+    <div id="customItemModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 transform transition-all">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">添加自定义项目</h3>
+                <button id="closeCustomItemModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="customItemName" class="block text-sm font-medium text-gray-700 mb-1">项目名称</label>
+                    <input type="text" id="customItemName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="请输入自定义项目名称">
+                </div>
+                <div class="pt-2">
+                    <button id="saveCustomItem" class="w-full bg-primary hover:bg-accent text-white font-medium py-2 px-4 rounded-lg transition-all">
+                        保存
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="footer">
-      <div class="btn-row">
-        <button class="btn" id="btnAlbum">📁</button>
-        <button class="btn btn-capture" id="btnCapture">📸</button>
-        <button class="btn" id="btnFlash">⚡</button>
-      </div>
-      <div class="tips">将文档放入框内，系统将自动识别边框</div>
+
+    <!-- 帮助模态框 -->
+    <div id="helpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">使用帮助</h3>
+                <button id="closeHelpModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4 text-gray-700">
+                <div>
+                    <h4 class="font-medium text-primary mb-2">基本操作流程</h4>
+                    <ol class="list-decimal list-inside space-y-1 text-sm">
+                        <li>在"基本信息"区域输入体检者编号和姓名</li>
+                        <li>在"体检项目选择"区域选择需要拍照的项目</li>
+                        <li>点击"拍照"按钮进行拍照</li>
+                        <li>确认照片无误后点击"保存照片"按钮</li>
+                        <li>在"已拍摄照片"区域查看和管理已保存的照片</li>
+                    </ol>
+                </div>
+                <div>
+                    <h4 class="font-medium text-primary mb-2">批量体检模式</h4>
+                    <p class="text-sm">批量模式允许您连续为多位体检者拍照，系统会自动按顺序命名并保存照片。您可以通过Excel导入或手动添加体检者信息。</p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-primary mb-2">自定义项目</h4>
+                    <p class="text-sm">点击"自定义项目"可以添加系统预设之外的体检项目，添加后会显示在项目列表中供选择。</p>
+                </div>
+                <div>
+                    <h4 class="font-medium text-primary mb-2">文件名格式</h4>
+                    <p class="text-sm">系统会自动按照"编号-姓名-项目"的格式生成文件名，例如："101-张三-抽血.jpg"。</p>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
-  <canvas id="sourceCanvas"></canvas>
-  <canvas id="resultCanvas"></canvas>
 
-  <script>
-    let cvReady = false;
-    let stream = null;
-    let detectionInterval = null;
-    let isFlashOn = false;
+    <!-- 设置模态框 -->
+    <div id="settingsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">设置</h3>
+                <button id="closeSettingsModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label for="imageQuality" class="block text-sm font-medium text-gray-700 mb-1">图片质量</label>
+                    <select id="imageQuality" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                        <option value="high">高</option>
+                        <option value="medium" selected>中</option>
+                        <option value="low">低</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="imageFormat" class="block text-sm font-medium text-gray-700 mb-1">图片格式</label>
+                    <select id="imageFormat" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all">
+                        <option value="jpg" selected>JPG</option>
+                        <option value="png">PNG</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-sm font-medium text-gray-700">自动保存</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                <div class="pt-2">
+                    <button id="saveSettings" class="w-full bg-primary hover:bg-accent text-white font-medium py-2 px-4 rounded-lg transition-all">
+                        保存设置
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    const video = document.getElementById('videoPreview');
-    const sourceCanvas = document.getElementById('sourceCanvas');
-    const resultCanvas = document.getElementById('resultCanvas');
-    const ctx = sourceCanvas.getContext('2d');
-    const scanFrame = document.getElementById('scanFrame');
-    const statusText = document.getElementById('status');
+    <!-- 成功提示 -->
+    <div id="successToast" class="fixed bottom-4 right-4 bg-success text-white px-4 py-3 rounded-lg shadow-lg transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center">
+        <i class="fa fa-check-circle mr-2"></i>
+        <span id="toastMessage">操作成功</span>
+    </div>
 
-    // OpenCV 就绪回调
-    function onOpenCvReady() {
-      cvReady = true;
-      console.log('OpenCV.js 已加载');
-      initCamera();
-    }
+    <script>
+        // 全局变量
+        let selectedExaminationItem = null;
+        let capturedImage = null;
+        let examinationItems = [
+            { id: 'blood', name: '抽血', icon: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1805157901170245641~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=sHW3WsOLO%2FdYsCMnX9H%2BywoU4Lo%3D' },
+            { id: 'b-ultrasound', name: 'B超检查', icon: 'https://p11-doubao-search-sign.byteimg.com/labis/0f5e5325089d76040d097b86c67122e2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=BWQsiGLJNpMweoQ8it%2BfF7OlLRg%3D' },
+            { id: 'blood-routine', name: '血常规', icon: 'https://p11-doubao-search-sign.byteimg.com/labis/image/8d0a55a83ca664150796eb5f80f94015~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=RODmIPTq7sF4fkqAY5X78nkslX8%3D' },
+            { id: 'blood-biochemistry', name: '血生化', icon: 'https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2323205225551364107~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=kS2nX7fiUND1YdjFfJKeERWDxxA%3D' },
+            { id: 'glycated-hemoglobin', name: '糖化血红蛋白', icon: 'https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2053406993631805450~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=5%2BsHZ%2BWbySZMp%2BnnJEcGfS1n9nA%3D' },
+            { id: 'urine-routine', name: '尿常规', icon: 'https://p26-doubao-search-sign.byteimg.com/labis/29628a4acd455071a326c4a928a06bda~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780599&x-signature=ppHlCiEQp6Lp9MUwelfrH4PPkfw%3D' },
+            { id: 'chest-xray', name: '胸片', icon: 'https://p11-doubao-search-sign.byteimg.com/labis/56a28cca8b406a448f50883a51f483ab~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780599&x-signature=kkXIZDSjvGRNxQ%2F89ANd2pZ5k70%3D' },
+            { id: 'ecg', name: '心电图', icon: 'https://p3-doubao-search-sign.byteimg.com/labis/b54a1ccf4f08fca6ad072aeb7cc59a2d~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=8gPy058%2BYCz%2B7at4vrLi7rOy27w%3D' },
+            { id: 'b-ultrasound-report', name: 'B超单', icon: 'https://p11-doubao-search-sign.byteimg.com/labis/b85501903a36a19545ffb10f8273574f~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=WMTD1hKLRUbe3xKFbnxIbsPcNvA%3D' },
+            { id: 'blood-pressure', name: '血压', icon: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1621885126830587909~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780607&x-signature=9Z5kuKlJYrICVT0uvZvyEcR6eSk%3D' },
+            { id: 'dorsal-artery', name: '足背动脉', icon: 'https://p26-doubao-search-sign.byteimg.com/labis/44a4f563908601d7f616475221d411f7~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780626&x-signature=1jV7Jn74j4QxZb3l6m0g%2FwH9kP5aF2tE' }
+        ];
+        let customItems = [];
+        let savedPhotos = [];
 
-    // 初始化摄像头
-    async function initCamera() {
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: 'environment',
-            width: { ideal: 1920 },
-            height: { ideal: 1080 }
-          }
+        // DOM 元素
+        const singleModeBtn = document.getElementById('singleModeBtn');
+        const batchModeBtn = document.getElementById('batchModeBtn');
+        const singleMode = document.getElementById('singleMode');
+        const batchMode = document.getElementById('batchMode');
+        const idNumberInput = document.getElementById('idNumber');
+        const nameInput = document.getElementById('name');
+        const examinationItemsContainer = document.querySelectorAll('.examination-item');
+        const previewArea = document.getElementById('previewArea');
+        const selectedItemDisplay = document.getElementById('selectedItemDisplay');
+        const previewImage = document.getElementById('previewImage');
+        const currentIdDisplay = document.getElementById('currentId');
+        const currentNameDisplay = document.getElementById('currentName');
+        const currentItemDisplay = document.getElementById('currentItem');
+        const generatedFilenameDisplay = document.getElementById('generatedFilename');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const photoList = document.getElementById('photoList');
+        const customItemModal = document.getElementById('customItemModal');
+        const closeCustomItemModal = document.getElementById('closeCustomItemModal');
+        const customItemNameInput = document.getElementById('customItemName');
+        const saveCustomItemBtn = document.getElementById('saveCustomItem');
+        const helpBtn = document.getElementById('helpBtn');
+        const helpModal = document.getElementById('helpModal');
+        const closeHelpModal = document.getElementById('closeHelpModal');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsModal = document.getElementById('settingsModal');
+        const closeSettingsModal = document.getElementById('closeSettingsModal');
+        const saveSettingsBtn = document.getElementById('saveSettings');
+        const successToast = document.getElementById('successToast');
+        const toastMessage = document.getElementById('toastMessage');
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 模式切换
+            singleModeBtn.addEventListener('click', () => {
+                singleModeBtn.classList.add('bg-primary', 'text-white');
+                singleModeBtn.classList.remove('text-gray-600');
+                batchModeBtn.classList.remove('bg-primary', 'text-white');
+                batchModeBtn.classList.add('text-gray-600');
+                singleMode.classList.remove('hidden');
+                batchMode.classList.add('hidden');
+            });
+
+            batchModeBtn.addEventListener('click', () => {
+                batchModeBtn.classList.add('bg-primary', 'text-white');
+                batchModeBtn.classList.remove('text-gray-600');
+                singleModeBtn.classList.remove('bg-primary', 'text-white');
+                singleModeBtn.classList.add('text-gray-600');
+                batchMode.classList.remove('hidden');
+                singleMode.classList.add('hidden');
+            });
+
+            // 体检项目选择
+            examinationItemsContainer.forEach((item, index) => {
+                // 跳过自定义项目按钮
+                if (index === examinationItemsContainer.length - 1) {
+                    item.addEventListener('click', () => {
+                        customItemModal.classList.remove('hidden');
+                    });
+                    return;
+                }
+
+                item.addEventListener('click', () => {
+                    // 移除其他项目的选中状态
+                    examinationItemsContainer.forEach(i => i.classList.remove('item-selected'));
+                    // 添加当前项目的选中状态
+                    item.classList.add('item-selected');
+                    
+                    // 更新选中的项目
+                    selectedExaminationItem = examinationItems[index];
+                    
+                    // 更新预览区域
+                    previewArea.classList.remove('hidden');
+                    previewImage.classList.add('hidden');
+                    selectedItemDisplay.textContent = `已选择: ${selectedExaminationItem.name}`;
+                    selectedItemDisplay.classList.remove('hidden');
+                    
+                    // 更新当前设置显示
+                    updateCurrentSettings();
+                    
+                    // 启用拍照按钮
+                    captureBtn.disabled = false;
+                    captureBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+            });
+
+            // 基本信息输入监听
+            idNumberInput.addEventListener('input', updateCurrentSettings);
+            nameInput.addEventListener('input', updateCurrentSettings);
+
+            // 拍照按钮
+            captureBtn.addEventListener('click', () => {
+                if (!selectedExaminationItem) {
+                    showToast('请先选择体检项目', 'warning');
+                    return;
+                }
+
+                if (!idNumberInput.value || !nameInput.value) {
+                    showToast('请输入编号和姓名', 'warning');
+                    return;
+                }
+
+                // 模拟拍照功能
+                simulateCapture();
+            });
+
+            // 重新拍照按钮
+            retakeBtn.addEventListener('click', () => {
+                // 重置状态
+                capturedImage = null;
+                previewImage.classList.add('hidden');
+                previewArea.classList.remove('hidden');
+                captureBtn.classList.remove('hidden');
+                retakeBtn.classList.add('hidden');
+                saveBtn.classList.add('hidden');
+            });
+
+            // 保存照片按钮
+            saveBtn.addEventListener('click', () => {
+                if (!capturedImage) return;
+
+                // 创建文件名
+                const filename = `${idNumberInput.value}-${nameInput.value}-${selectedExaminationItem.name}.jpg`;
+                
+                // 模拟保存照片
+                savePhoto(filename, capturedImage);
+                
+                // 显示成功提示
+                showToast('照片保存成功');
+                
+                // 重置状态
+                resetCaptureState();
+            });
+
+            // 自定义项目模态框
+            closeCustomItemModal.addEventListener('click', () => {
+                customItemModal.classList.add('hidden');
+                customItemNameInput.value = '';
+            });
+
+            saveCustomItemBtn.addEventListener('click', () => {
+                const customName = customItemNameInput.value.trim();
+                if (!customName) {
+                    showToast('请输入项目名称', 'warning');
+                    return;
+                }
+
+                // 添加自定义项目
+                const newCustomItem = {
+                    id: `custom-${Date.now()}`,
+                    name: customName,
+                    icon: 'https://p3-doubao-search-sign.byteimg.com/labis/b54a1ccf4f08fca6ad072aeb7cc59a2d~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=8gPy058%2BYCz%2B7at4vrLi7rOy27w%3D' // 使用默认图标
+                };
+
+                customItems.push(newCustomItem);
+                examinationItems.push(newCustomItem);
+
+                // 添加到项目列表
+                const customItemsContainer = document.querySelector('.grid.grid-cols-2');
+                const newItem = document.createElement('div');
+                newItem.className = 'examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md';
+                newItem.innerHTML = `
+                    <img src="${newCustomItem.icon}" alt="${newCustomItem.name}" class="w-12 h-12 mx-auto mb-2">
+                    <span class="text-sm font-medium">${newCustomItem.name}</span>
+                `;
+                
+                // 插入到自定义项目按钮之前
+                customItemsContainer.insertBefore(newItem, customItemsContainer.lastElementChild);
+
+                // 添加点击事件
+                newItem.addEventListener('click', () => {
+                    // 移除其他项目的选中状态
+                    document.querySelectorAll('.examination-item').forEach(i => i.classList.remove('item-selected'));
+                    // 添加当前项目的选中状态
+                    newItem.classList.add('item-selected');
+                    
+                    // 更新选中的项目
+                    selectedExaminationItem = newCustomItem;
+                    
+                    // 更新预览区域
+                    previewArea.classList.remove('hidden');
+                    previewImage.classList.add('hidden');
+                    selectedItemDisplay.textContent = `已选择: ${selectedExaminationItem.name}`;
+                    selectedItemDisplay.classList.remove('hidden');
+                    
+                    // 更新当前设置显示
+                    updateCurrentSettings();
+                    
+                    // 启用拍照按钮
+                    captureBtn.disabled = false;
+                    captureBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+
+                // 关闭模态框
+                customItemModal.classList.add('hidden');
+                customItemNameInput.value = '';
+
+                // 显示成功提示
+                showToast('自定义项目添加成功');
+            });
+
+            // 帮助模态框
+            helpBtn.addEventListener('click', () => {
+                helpModal.classList.remove('hidden');
+            });
+
+            closeHelpModal.addEventListener('click', () => {
+                helpModal.classList.add('hidden');
+            });
+
+            // 设置模态框
+            settingsBtn.addEventListener('click', () => {
+                settingsModal.classList.remove('hidden');
+            });
+
+            closeSettingsModal.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            saveSettingsBtn.addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+                showToast('设置已保存');
+            });
+
+            // 点击模态框外部关闭
+            window.addEventListener('click', (e) => {
+                if (e.target === customItemModal) customItemModal.classList.add('hidden');
+                if (e.target === helpModal) helpModal.classList.add('hidden');
+                if (e.target === settingsModal) settingsModal.classList.add('hidden');
+            });
         });
-        video.srcObject = stream;
-        statusText.textContent = '摄像头已开启，请对准文档';
-        startEdgeDetection();
-      } catch (err) {
-        console.error('无法访问摄像头:', err);
-        statusText.textContent = '摄像头权限被拒绝或设备不支持';
-      }
-    }
 
-    // 开始边缘检测（带防抖）
-    function startEdgeDetection() {
-      clearInterval(detectionInterval);
-      detectionInterval = setInterval(() => {
-        if (cvReady && video.readyState === video.HAVE_ENOUGH_DATA) {
-          autoDetectBorder();
+        // 更新当前设置显示
+        function updateCurrentSettings() {
+            currentIdDisplay.textContent = idNumberInput.value || '-';
+            currentNameDisplay.textContent = nameInput.value || '-';
+            currentItemDisplay.textContent = selectedExaminationItem ? selectedExaminationItem.name : '-';
+            
+            // 生成文件名
+            if (idNumberInput.value && nameInput.value && selectedExaminationItem) {
+                const filename = `${idNumberInput.value}-${nameInput.value}-${selectedExaminationItem.name}.jpg`;
+                generatedFilenameDisplay.textContent = filename;
+            } else {
+                generatedFilenameDisplay.textContent = '-';
+            }
         }
-      }, 800); // 800ms检测一次，平衡性能与响应速度
-    }
 
-    // 核心：自动吸附边框
-    function autoDetectBorder() {
-      sourceCanvas.width = video.videoWidth;
-      sourceCanvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0, sourceCanvas.width, sourceCanvas.height);
-
-      let src = cv.imread(sourceCanvas);
-      let gray = new cv.Mat();
-      let edges = new cv.Mat();
-      let hierarchy = new cv.Mat();
-
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
-      cv.Canny(gray, edges, 50, 150, 3, false);
-
-      let contours = new cv.MatVector();
-      cv.findContours(edges, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-      let maxArea = 0;
-      let maxContour = null;
-      for (let i = 0; i < contours.size(); ++i) {
-        let area = cv.contourArea(contours.get(i));
-        if (area > maxArea && area > sourceCanvas.width * sourceCanvas.height * 0.05) {
-          maxArea = area;
-          maxContour = contours.get(i);
+        // 模拟拍照功能
+        function simulateCapture() {
+            // 显示加载状态
+            captureBtn.disabled = true;
+            captureBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 拍照中...';
+            
+            // 模拟延迟
+            setTimeout(() => {
+                // 恢复按钮状态
+                captureBtn.disabled = false;
+                captureBtn.innerHTML = '<i class="fa fa-camera mr-2"></i> 拍照';
+                
+                // 生成模拟图片数据
+                const canvas = document.createElement('canvas');
+                canvas.width = 800;
+                canvas.height = 600;
+                const ctx = canvas.getContext('2d');
+                
+                // 绘制背景
+                ctx.fillStyle = '#f0f0f0';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 绘制文本
+                ctx.fillStyle = '#333';
+                ctx.font = '24px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`${selectedExaminationItem.name}`, canvas.width / 2, canvas.height / 2 - 30);
+                ctx.font = '18px Arial';
+                ctx.fillText(`${idNumberInput.value} - ${nameInput.value}`, canvas.width / 2, canvas.height / 2);
+                ctx.font = '14px Arial';
+                ctx.fillText(`拍摄时间: ${new Date().toLocaleString()}`, canvas.width / 2, canvas.height / 2 + 30);
+                
+                // 添加水印
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.font = '40px Arial';
+                ctx.rotate(-Math.PI / 4);
+                ctx.fillText('老年人体检', -canvas.height / 3, canvas.width / 2);
+                
+                // 转换为图片数据
+                capturedImage = canvas.toDataURL('image/jpeg');
+                
+                // 更新预览
+                previewImage.src = capturedImage;
+                previewImage.classList.remove('hidden');
+                previewArea.classList.add('hidden');
+                
+                // 切换按钮
+                captureBtn.classList.add('hidden');
+                retakeBtn.classList.remove('hidden');
+                saveBtn.classList.remove('hidden');
+            }, 1500);
         }
-      }
 
-      if (maxContour) {
-        let rect = cv.boundingRect(maxContour);
-        let aspectRatio = rect.width / rect.height;
-        if (aspectRatio > 0.5 && aspectRatio < 2.0) { // 过滤掉过于狭长的矩形
-          scanFrame.classList.add('active');
-          statusText.textContent = '文档边框已锁定';
-        } else {
-          scanFrame.classList.remove('active');
-          statusText.textContent = '未检测到有效文档';
+        // 保存照片
+        function savePhoto(filename, imageData) {
+            // 创建照片对象
+            const photo = {
+                id: Date.now(),
+                filename,
+                imageData,
+                timestamp: new Date()
+            };
+            
+            // 添加到保存列表
+            savedPhotos.push(photo);
+            
+            // 更新照片列表显示
+            updatePhotoList();
+            
+            // 在实际应用中，这里会将图片保存到服务器或本地文件系统
+            console.log('保存照片:', filename);
         }
-      } else {
-        scanFrame.classList.remove('active');
-        statusText.textContent = '请将文档置于光线充足处';
-      }
 
-      src.delete(); gray.delete(); edges.delete();
-      contours.delete(); hierarchy.delete();
-    }
-
-    // 拍照并处理
-    document.getElementById('btnCapture').addEventListener('click', function() {
-      if (!scanFrame.classList.contains('active')) {
-        alert('请先确保文档边框被正确识别');
-        return;
-      }
-      statusText.textContent = '正在处理图像...';
-      captureAndProcess();
-    });
-
-    function captureAndProcess() {
-      let src = cv.imread(sourceCanvas);
-      let gray = new cv.Mat();
-      cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
-      cv.GaussianBlur(gray, gray, new cv.Size(5, 5), 0);
-
-      let contours = new cv.MatVector();
-      let hierarchy = new cv.Mat();
-      cv.findContours(gray, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
-
-      let maxArea = 0;
-      let maxContour = null;
-      for (let i = 0; i < contours.size(); ++i) {
-        let area = cv.contourArea(contours.get(i));
-        if (area > maxArea) {
-          maxArea = area;
-          maxContour = contours.get(i);
+        // 更新照片列表显示
+        function updatePhotoList() {
+            // 清空列表
+            photoList.innerHTML = '';
+            
+            if (savedPhotos.length === 0) {
+                photoList.innerHTML = `
+                    <div class="text-center text-gray-500 py-8 col-span-full">
+                        <i class="fa fa-picture-o text-4xl mb-2"></i>
+                        <p>暂无拍摄照片</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // 添加照片项
+            savedPhotos.forEach(photo => {
+                const photoItem = document.createElement('div');
+                photoItem.className = 'relative group';
+                photoItem.innerHTML = `
+                    <div class="bg-gray-100 rounded-lg overflow-hidden aspect-video">
+                        <img src="${photo.imageData}" alt="${photo.filename}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="mt-1 text-xs text-gray-600 truncate">${photo.filename}</div>
+                    <button class="absolute top-1 right-1 bg-white rounded-full p-1 shadow-md opacity-0 group-hover:opacity-100 transition-opacity" onclick="deletePhoto(${photo.id})">
+                        <i class="fa fa-trash text-gray-600 hover:text-danger"></i>
+                    </button>
+                `;
+                photoList.appendChild(photoItem);
+            });
         }
-      }
 
-      if (maxContour) {
-        let rect = cv.boundingRect(maxContour);
-        let dst = new cv.Mat();
-        let dsize = new cv.Size(rect.width, rect.height);
-        cv.resize(src.roi(rect), dst, dsize, 0, 0, cv.INTER_LINEAR);
-        cv.imshow(resultCanvas, dst);
-        downloadImage(resultCanvas.toDataURL('image/jpeg'));
-        dst.delete();
-      }
-      src.delete(); gray.delete(); contours.delete(); hierarchy.delete();
-      statusText.textContent = '文档已保存';
-    }
+        // 删除照片
+        function deletePhoto(id) {
+            // 从列表中移除
+            savedPhotos = savedPhotos.filter(photo => photo.id !== id);
+            
+            // 更新显示
+            updatePhotoList();
+            
+            // 显示提示
+            showToast('照片已删除');
+        }
 
-    function downloadImage(dataUrl) {
-      const a = document.createElement('a');
-      a.href = dataUrl;
-      a.download = '智慧扫描_' + new Date().getTime() + '.jpg';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    }
+        // 重置拍照状态
+        function resetCaptureState() {
+            capturedImage = null;
+            previewImage.classList.add('hidden');
+            previewArea.classList.remove('hidden');
+            captureBtn.classList.remove('hidden');
+            retakeBtn.classList.add('hidden');
+            saveBtn.classList.add('hidden');
+        }
 
-    // 关闭应用
-    document.querySelector('.btn-close').addEventListener('click', function() {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-      clearInterval(detectionInterval);
-      window.close();
-    });
-
-    // 切换闪光灯（模拟）
-    document.getElementById('btnFlash').addEventListener('click', function() {
-      isFlashOn = !isFlashOn;
-      this.style.background = isFlashOn ? '#ff8c00' : 'transparent';
-      this.style.color = isFlashOn ? '#000' : '#fff';
-    });
-  </script>
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            toastMessage.textContent = message;
+            
+            // 设置颜色
+            if (type === 'warning') {
+                successToast.classList.remove('bg-success');
+                successToast.classList.add('bg-warning');
+            } else {
+                successToast.classList.remove('bg-warning');
+                successToast.classList.add('bg-success');
+            }
+            
+            // 显示提示
+            successToast.classList.remove('translate-y-20', 'opacity-0');
+            
+            // 自动隐藏
+            setTimeout(() => {
+                successToast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+    </script>
 </body>
 </html>
