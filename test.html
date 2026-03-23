@@ -189,10 +189,6 @@
                         </div>
                         
                         <div class="space-y-3">
-                            <button id="captureBtn" class="w-full bg-primary hover:bg-accent text-white font-medium py-3 px-4 rounded-lg transition-all btn-shadow flex items-center justify-center">
-                                <i class="fa fa-camera mr-2"></i>
-                                拍照
-                            </button>
                             <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all hidden">
                                 重新拍照
                             </button>
@@ -206,10 +202,16 @@
 
             <!-- 已拍摄照片列表 -->
             <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fa fa-th-large text-primary mr-2"></i>
-                    已拍摄照片
-                </h2>
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fa fa-th-large text-primary mr-2"></i>
+                        已拍摄照片
+                    </h2>
+                    <button id="batchDownloadBtn" class="bg-primary hover:bg-accent text-white text-sm font-medium py-2 px-4 rounded-lg transition-all hidden">
+                        <i class="fa fa-download mr-1"></i>
+                        批量下载
+                    </button>
+                </div>
                 <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                     <!-- 照片将在这里动态添加 -->
                     <div class="text-center text-gray-500 py-8 col-span-full">
@@ -592,10 +594,10 @@
         const currentNameDisplay = document.getElementById('currentName');
         const currentItemDisplay = document.getElementById('currentItem');
         const generatedFilenameDisplay = document.getElementById('generatedFilename');
-        const captureBtn = document.getElementById('captureBtn');
         const retakeBtn = document.getElementById('retakeBtn');
         const saveBtn = document.getElementById('saveBtn');
         const photoList = document.getElementById('photoList');
+        const batchDownloadBtn = document.getElementById('batchDownloadBtn');
         const customItemModal = document.getElementById('customItemModal');
         const closeCustomItemModal = document.getElementById('closeCustomItemModal');
         const customItemNameInput = document.getElementById('customItemName');
@@ -659,9 +661,10 @@
                     // 更新当前设置显示
                     updateCurrentSettings();
                     
-                    // 启用拍照按钮
-                    captureBtn.disabled = false;
-                    captureBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    // 自动启动摄像头
+                    if (!stream && cameraPreview.classList.contains('hidden')) {
+                        startCamera();
+                    }
                 });
             });
 
@@ -669,21 +672,7 @@
             idNumberInput.addEventListener('input', updateCurrentSettings);
             nameInput.addEventListener('input', updateCurrentSettings);
 
-            // 拍照按钮
-            captureBtn.addEventListener('click', () => {
-                if (!selectedExaminationItem) {
-                    showToast('请先选择体检项目', 'warning');
-                    return;
-                }
 
-                if (!idNumberInput.value || !nameInput.value) {
-                    showToast('请输入编号和姓名', 'warning');
-                    return;
-                }
-
-                // 请求摄像头权限并开始预览
-                startCamera();
-            });
             
             // 页面加载完成后自动打开摄像头
             window.addEventListener('load', () => {
@@ -794,9 +783,10 @@
                     // 更新当前设置显示
                     updateCurrentSettings();
                     
-                    // 启用拍照按钮
-                    captureBtn.disabled = false;
-                    captureBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    // 自动启动摄像头
+                    if (!stream && cameraPreview.classList.contains('hidden')) {
+                        startCamera();
+                    }
                 });
 
                 // 关闭模态框
@@ -836,6 +826,9 @@
                 if (e.target === helpModal) helpModal.classList.add('hidden');
                 if (e.target === settingsModal) settingsModal.classList.add('hidden');
             });
+
+            // 批量下载按钮
+            batchDownloadBtn.addEventListener('click', batchDownloadPhotos);
         });
 
         // 更新当前设置显示
@@ -855,10 +848,6 @@
 
         // 开始摄像头预览
         function startCamera() {
-            // 显示加载状态
-            captureBtn.disabled = true;
-            captureBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 启动摄像头...';
-            
             // 请求摄像头权限
             navigator.mediaDevices.getUserMedia({
                 video: { facingMode: currentCamera },
@@ -872,18 +861,10 @@
                 previewArea.classList.add('hidden');
                 cameraPreview.classList.remove('hidden');
                 cameraControls.classList.remove('hidden');
-                
-                // 恢复按钮状态
-                captureBtn.disabled = false;
-                captureBtn.innerHTML = '<i class="fa fa-camera mr-2"></i> 拍照';
             })
             .catch(error => {
                 console.error('无法访问摄像头:', error);
                 showToast('无法访问摄像头，请检查权限设置', 'warning');
-                
-                // 恢复按钮状态
-                captureBtn.disabled = false;
-                captureBtn.innerHTML = '<i class="fa fa-camera mr-2"></i> 拍照';
                 
                 // 如果无法访问摄像头，使用模拟拍照
                 simulateCapture();
@@ -945,23 +926,14 @@
             previewArea.classList.add('hidden');
             
             // 切换按钮
-            captureBtn.classList.add('hidden');
             retakeBtn.classList.remove('hidden');
             saveBtn.classList.remove('hidden');
         }
 
         // 模拟拍照功能（备用方案）
         function simulateCapture() {
-            // 显示加载状态
-            captureBtn.disabled = true;
-            captureBtn.innerHTML = '<i class="fa fa-spinner fa-spin mr-2"></i> 拍照中...';
-            
             // 模拟延迟
             setTimeout(() => {
-                // 恢复按钮状态
-                captureBtn.disabled = false;
-                captureBtn.innerHTML = '<i class="fa fa-camera mr-2"></i> 拍照';
-                
                 // 生成模拟图片数据
                 const canvas = document.createElement('canvas');
                 canvas.width = 800;
@@ -997,7 +969,6 @@
                 previewArea.classList.add('hidden');
                 
                 // 切换按钮
-                captureBtn.classList.add('hidden');
                 retakeBtn.classList.remove('hidden');
                 saveBtn.classList.remove('hidden');
             }, 1500);
@@ -1019,8 +990,44 @@
             // 更新照片列表显示
             updatePhotoList();
             
-            // 在实际应用中，这里会将图片保存到服务器或本地文件系统
+            // 将图片保存到本地
+            downloadImage(imageData, filename);
+            
             console.log('保存照片:', filename);
+        }
+
+        // 下载图片到本地
+        function downloadImage(imageData, filename) {
+            const link = document.createElement('a');
+            link.href = imageData;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // 批量下载照片
+        function batchDownloadPhotos() {
+            if (savedPhotos.length === 0) {
+                showToast('没有可下载的照片', 'warning');
+                return;
+            }
+
+            showToast('开始批量下载...');
+
+            // 逐个下载照片
+            savedPhotos.forEach((photo, index) => {
+                setTimeout(() => {
+                    downloadImage(photo.imageData, photo.filename);
+                    
+                    // 最后一个文件下载完成后显示提示
+                    if (index === savedPhotos.length - 1) {
+                        setTimeout(() => {
+                            showToast(`已完成 ${savedPhotos.length} 张照片的下载`);
+                        }, 500);
+                    }
+                }, index * 300); // 延迟下载，避免浏览器阻止
+            });
         }
 
         // 更新照片列表显示
@@ -1035,8 +1042,13 @@
                         <p>暂无拍摄照片</p>
                     </div>
                 `;
+                // 隐藏批量下载按钮
+                batchDownloadBtn.classList.add('hidden');
                 return;
             }
+            
+            // 显示批量下载按钮
+            batchDownloadBtn.classList.remove('hidden');
             
             // 添加照片项
             savedPhotos.forEach(photo => {
@@ -1072,7 +1084,6 @@
             capturedImage = null;
             previewImage.classList.add('hidden');
             previewArea.classList.remove('hidden');
-            captureBtn.classList.remove('hidden');
             retakeBtn.classList.add('hidden');
             saveBtn.classList.add('hidden');
             stopCamera();
