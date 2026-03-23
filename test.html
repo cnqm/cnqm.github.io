@@ -135,6 +135,90 @@
                 </div>
             </div>
 
+            <!-- 拍照区域 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-camera text-primary mr-2"></i>
+                    拍照区域
+                </h2>
+                <div class="flex flex-col md:flex-row gap-6">
+                    <!-- 预览区域 -->
+                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center min-h-[300px] relative">
+                        <div id="previewArea" class="w-full h-full flex flex-col items-center justify-center">
+                            <i class="fa fa-image text-gray-400 text-5xl mb-3"></i>
+                            <p class="text-gray-500 text-center">选择体检项目后点击下方按钮拍照</p>
+                            <p id="selectedItemDisplay" class="mt-2 text-primary font-medium hidden"></p>
+                        </div>
+                        <video id="cameraPreview" class="w-full h-full object-cover hidden" autoplay="" playsinline=""></video>
+                        <img id="previewImage" class="w-full h-full object-contain hidden" alt="预览图片">
+                        <div id="cameraControls" class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4 hidden">
+                            <button id="closeCameraBtn" class="bg-white rounded-full p-2 shadow-md text-gray-700 hover:text-primary">
+                                <i class="fa fa-times"></i>
+                            </button>
+                            <button id="captureImageBtn" class="bg-primary rounded-full p-3 shadow-lg text-white hover:bg-accent">
+                                <i class="fa fa-camera text-xl"></i>
+                            </button>
+                            <button id="switchCameraBtn" class="bg-white rounded-full p-2 shadow-md text-gray-700 hover:text-primary">
+                                <i class="fa fa-refresh"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 操作区域 -->
+                    <div class="md:w-64 flex flex-col gap-4">
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h3 class="text-sm font-medium text-gray-700 mb-2">当前设置</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">编号:</span>
+                                    <span id="currentId" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">姓名:</span>
+                                    <span id="currentName" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">项目:</span>
+                                    <span id="currentItem" class="font-medium">-</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-600">生成文件名:</span>
+                                    <span id="generatedFilename" class="font-medium text-primary truncate">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <button id="captureBtn" class="w-full bg-primary hover:bg-accent text-white font-medium py-3 px-4 rounded-lg transition-all btn-shadow flex items-center justify-center">
+                                <i class="fa fa-camera mr-2"></i>
+                                拍照
+                            </button>
+                            <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all hidden">
+                                重新拍照
+                            </button>
+                            <button id="saveBtn" class="w-full bg-success hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all hidden">
+                                保存照片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 已拍摄照片列表 -->
+            <div class="bg-white rounded-xl p-6 shadow-md">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class="fa fa-th-large text-primary mr-2"></i>
+                    已拍摄照片
+                </h2>
+                <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <!-- 照片将在这里动态添加 -->
+                    <div class="text-center text-gray-500 py-8 col-span-full">
+                        <i class="fa fa-picture-o text-4xl mb-2"></i>
+                        <p>暂无拍摄照片</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- 体检项目选择 -->
             <div class="bg-white rounded-xl p-6 shadow-md">
                 <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
@@ -203,90 +287,6 @@
                             <i class="fa fa-plus text-gray-500 text-xl"></i>
                         </div>
                         <span class="text-sm font-medium text-gray-500">自定义项目</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 拍照区域 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fa fa-camera text-primary mr-2"></i>
-                    拍照区域
-                </h2>
-                <div class="flex flex-col md:flex-row gap-6">
-                    <!-- 预览区域 -->
-                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center min-h-[300px] relative">
-                        <div id="previewArea" class="w-full h-full flex flex-col items-center justify-center">
-                            <i class="fa fa-image text-gray-400 text-5xl mb-3"></i>
-                            <p class="text-gray-500 text-center">选择体检项目后点击下方按钮拍照</p>
-                            <p id="selectedItemDisplay" class="mt-2 text-primary font-medium hidden"></p>
-                        </div>
-                        <video id="cameraPreview" class="w-full h-full object-cover hidden" autoplay="" playsinline=""></video>
-                        <img id="previewImage" class="w-full h-full object-contain hidden" alt="预览图片">
-                        <div id="cameraControls" class="absolute bottom-4 left-0 right-0 flex justify-center space-x-4 hidden">
-                            <button id="switchCameraBtn" class="bg-white rounded-full p-2 shadow-md text-gray-700 hover:text-primary">
-                                <i class="fa fa-refresh"></i>
-                            </button>
-                            <button id="captureImageBtn" class="bg-primary rounded-full p-3 shadow-lg text-white hover:bg-accent">
-                                <i class="fa fa-camera text-xl"></i>
-                            </button>
-                            <button id="closeCameraBtn" class="bg-white rounded-full p-2 shadow-md text-gray-700 hover:text-primary">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- 操作区域 -->
-                    <div class="md:w-64 flex flex-col gap-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-sm font-medium text-gray-700 mb-2">当前设置</h3>
-                            <div class="space-y-2 text-sm">
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">编号:</span>
-                                    <span id="currentId" class="font-medium">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">姓名:</span>
-                                    <span id="currentName" class="font-medium">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">项目:</span>
-                                    <span id="currentItem" class="font-medium">-</span>
-                                </div>
-                                <div class="flex justify-between">
-                                    <span class="text-gray-600">生成文件名:</span>
-                                    <span id="generatedFilename" class="font-medium text-primary truncate">-</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            <button id="captureBtn" class="w-full bg-primary hover:bg-accent text-white font-medium py-3 px-4 rounded-lg transition-all btn-shadow flex items-center justify-center">
-                                <i class="fa fa-camera mr-2"></i>
-                                拍照
-                            </button>
-                            <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all hidden">
-                                重新拍照
-                            </button>
-                            <button id="saveBtn" class="w-full bg-success hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all hidden">
-                                保存照片
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 已拍摄照片列表 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                    <i class="fa fa-th-large text-primary mr-2"></i>
-                    已拍摄照片
-                </h2>
-                <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    <!-- 照片将在这里动态添加 -->
-                    <div class="text-center text-gray-500 py-8 col-span-full">
-                        <i class="fa fa-picture-o text-4xl mb-2"></i>
-                        <p>暂无拍摄照片</p>
                     </div>
                 </div>
             </div>
@@ -555,7 +555,7 @@
         let selectedExaminationItem = null;
         let capturedImage = null;
         let stream = null;
-        let currentCamera = 'user';
+        let currentCamera = 'environment';
         let examinationItems = [
             { id: 'blood', name: '抽血', icon: 'https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1805157901170245641~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=sHW3WsOLO%2FdYsCMnX9H%2BywoU4Lo%3D' },
             { id: 'b-ultrasound', name: 'B超检查', icon: 'https://p11-doubao-search-sign.byteimg.com/labis/0f5e5325089d76040d097b86c67122e2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1789780587&x-signature=BWQsiGLJNpMweoQ8it%2BfF7OlLRg%3D' },
@@ -683,6 +683,14 @@
 
                 // 请求摄像头权限并开始预览
                 startCamera();
+            });
+            
+            // 页面加载完成后自动打开摄像头
+            window.addEventListener('load', () => {
+                // 延迟一秒后自动启动摄像头，确保页面完全加载
+                setTimeout(() => {
+                    startCamera();
+                }, 1000);
             });
 
             // 切换摄像头按钮
