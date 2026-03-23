@@ -121,35 +121,35 @@
         <!-- 单人体检模式 -->
         <div id="singleMode" class="space-y-6">
             <!-- 基本信息录入 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div class="bg-white rounded-xl p-4 shadow-md">
+                <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
                     <i class="fa fa-user-circle text-primary mr-2"></i>
                     基本信息
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label for="idNumber" class="block text-sm font-medium text-gray-700 mb-1">编号</label>
-                        <input type="text" id="idNumber" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="请输入体检编号，如：101">
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label for="idNumber" class="block text-xs font-medium text-gray-700 mb-1">编号</label>
+                        <input type="text" id="idNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm" placeholder="请输入体检编号，如：101">
                     </div>
-                    <div>
-                        <label for="name" class="block text-sm font-medium text-gray-700 mb-1">姓名</label>
-                        <input type="text" id="name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all" placeholder="请输入姓名，如：张三">
+                    <div class="flex-1">
+                        <label for="name" class="block text-xs font-medium text-gray-700 mb-1">姓名</label>
+                        <input type="text" id="name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-all text-sm" placeholder="请输入姓名，如：张三">
                     </div>
                 </div>
             </div>
 
             <!-- 拍照区域 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div class="bg-white rounded-xl p-4 shadow-md">
+                <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
                     <i class="fa fa-camera text-primary mr-2"></i>
                     拍照区域
                 </h2>
-                <div class="flex flex-col md:flex-row gap-6">
+                <div class="flex flex-col md:flex-row gap-4">
                     <!-- 预览区域 -->
-                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center min-h-[300px] relative">
+                    <div class="flex-1 border-2 border-dashed border-gray-300 rounded-lg p-2 flex flex-col items-center justify-center min-h-[400px] relative">
                         <div id="previewArea" class="w-full h-full flex flex-col items-center justify-center">
                             <i class="fa fa-image text-gray-400 text-5xl mb-3"></i>
-                            <p class="text-gray-500 text-center">选择体检项目后点击下方按钮拍照</p>
+                            <p class="text-gray-500 text-center">选择体检项目后自动启动摄像头</p>
                             <p id="selectedItemDisplay" class="mt-2 text-primary font-medium hidden"></p>
                         </div>
                         <video id="cameraPreview" class="w-full h-full object-cover hidden" autoplay="" playsinline=""></video>
@@ -168,10 +168,10 @@
                     </div>
                     
                     <!-- 操作区域 -->
-                    <div class="md:w-64 flex flex-col gap-4">
-                        <div class="bg-gray-50 rounded-lg p-4">
-                            <h3 class="text-sm font-medium text-gray-700 mb-2">当前设置</h3>
-                            <div class="space-y-2 text-sm">
+                    <div class="md:w-56 flex flex-col gap-3">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <h3 class="text-xs font-medium text-gray-700 mb-2">当前设置</h3>
+                            <div class="space-y-1 text-xs">
                                 <div class="flex justify-between">
                                     <span class="text-gray-600">编号:</span>
                                     <span id="currentId" class="font-medium">-</span>
@@ -185,17 +185,17 @@
                                     <span id="currentItem" class="font-medium">-</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-600">生成文件名:</span>
-                                    <span id="generatedFilename" class="font-medium text-primary truncate">-</span>
+                                    <span class="text-gray-600">文件名:</span>
+                                    <span id="generatedFilename" class="font-medium text-primary truncate text-right">-</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="space-y-3">
-                            <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-3 px-4 rounded-lg transition-all hidden">
+                        <div class="space-y-2">
+                            <button id="retakeBtn" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-3 rounded-lg transition-all text-sm hidden">
                                 重新拍照
                             </button>
-                            <button id="saveBtn" class="w-full bg-success hover:bg-green-600 text-white font-medium py-3 px-4 rounded-lg transition-all hidden">
+                            <button id="saveBtn" class="w-full bg-success hover:bg-green-600 text-white font-medium py-2 px-3 rounded-lg transition-all text-sm hidden">
                                 保存照片
                             </button>
                         </div>
@@ -204,18 +204,18 @@
             </div>
 
             <!-- 已拍摄照片列表 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-gray-800 flex items-center">
+            <div class="bg-white rounded-xl p-4 shadow-md">
+                <div class="flex justify-between items-center mb-3">
+                    <h2 class="text-base font-semibold text-gray-800 flex items-center">
                         <i class="fa fa-th-large text-primary mr-2"></i>
                         已拍摄照片
                     </h2>
-                    <button id="batchDownloadBtn" class="bg-primary hover:bg-accent text-white text-sm font-medium py-2 px-4 rounded-lg transition-all hidden">
+                    <button id="batchDownloadBtn" class="bg-primary hover:bg-accent text-white text-xs font-medium py-1 px-3 rounded-lg transition-all hidden">
                         <i class="fa fa-download mr-1"></i>
                         批量下载
                     </button>
                 </div>
-                <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div id="photoList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
                     <!-- 照片将在这里动态添加 -->
                     <div class="text-center text-gray-500 py-8 col-span-full">
                         <i class="fa fa-picture-o text-4xl mb-2"></i>
@@ -225,73 +225,73 @@
             </div>
 
             <!-- 体检项目选择 -->
-            <div class="bg-white rounded-xl p-6 shadow-md">
-                <h2 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <div class="bg-white rounded-xl p-4 shadow-md">
+                <h2 class="text-base font-semibold text-gray-800 mb-3 flex items-center">
                     <i class="fa fa-list-alt text-primary mr-2"></i>
                     体检项目选择
                 </h2>
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-3">
                     <!-- 抽血 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1805157901170245641~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=sHW3WsOLO%2FdYsCMnX9H%2BywoU4Lo%3D" alt="抽血" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">抽血</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1805157901170245641~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=sHW3WsOLO%2FdYsCMnX9H%2BywoU4Lo%3D" alt="抽血" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">抽血</span>
                     </div>
                     <!-- B超检查 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/0f5e5325089d76040d097b86c67122e2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=BWQsiGLJNpMweoQ8it%2BfF7OlLRg%3D" alt="B超检查" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">B超检查</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/0f5e5325089d76040d097b86c67122e2~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=BWQsiGLJNpMweoQ8it%2BfF7OlLRg%3D" alt="B超检查" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">B超检查</span>
                     </div>
                     <!-- 血常规 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/image/8d0a55a83ca664150796eb5f80f94015~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=RODmIPTq7sF4fkqAY5X78nkslX8%3D" alt="血常规" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">血常规</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/image/8d0a55a83ca664150796eb5f80f94015~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=RODmIPTq7sF4fkqAY5X78nkslX8%3D" alt="血常规" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">血常规</span>
                     </div>
                     <!-- 血生化 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2323205225551364107~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=kS2nX7fiUND1YdjFfJKeERWDxxA%3D" alt="血生化" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">血生化</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2323205225551364107~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=kS2nX7fiUND1YdjFfJKeERWDxxA%3D" alt="血生化" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">血生化</span>
                     </div>
                     <!-- 糖化血红蛋白 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2053406993631805450~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=5%2BsHZ%2BWbySZMp%2BnnJEcGfS1n9nA%3D" alt="糖化血红蛋白" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">糖化血红蛋白</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/2053406993631805450~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=5%2BsHZ%2BWbySZMp%2BnnJEcGfS1n9nA%3D" alt="糖化血红蛋白" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">糖化血红蛋白</span>
                     </div>
                     <!-- 尿常规 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/29628a4acd455071a326c4a928a06bda~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780599&amp;x-signature=ppHlCiEQp6Lp9MUwelfrH4PPkfw%3D" alt="尿常规" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">尿常规</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/29628a4acd455071a326c4a928a06bda~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780599&amp;x-signature=ppHlCiEQp6Lp9MUwelfrH4PPkfw%3D" alt="尿常规" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">尿常规</span>
                     </div>
                     <!-- 胸片 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/56a28cca8b406a448f50883a51f483ab~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780599&amp;x-signature=kkXIZDSjvGRNxQ%2F89ANd2pZ5k70%3D" alt="胸片" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">胸片</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/56a28cca8b406a448f50883a51f483ab~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780599&amp;x-signature=kkXIZDSjvGRNxQ%2F89ANd2pZ5k70%3D" alt="胸片" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">胸片</span>
                     </div>
                     <!-- 心电图 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/b54a1ccf4f08fca6ad072aeb7cc59a2d~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=8gPy058%2BYCz%2B7at4vrLi7rOy27w%3D" alt="心电图" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">心电图</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/labis/b54a1ccf4f08fca6ad072aeb7cc59a2d~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=8gPy058%2BYCz%2B7at4vrLi7rOy27w%3D" alt="心电图" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">心电图</span>
                     </div>
                     <!-- B超单 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/b85501903a36a19545ffb10f8273574f~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=WMTD1hKLRUbe3xKFbnxIbsPcNvA%3D" alt="B超单" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">B超单</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/b85501903a36a19545ffb10f8273574f~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780587&amp;x-signature=WMTD1hKLRUbe3xKFbnxIbsPcNvA%3D" alt="B超单" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">B超单</span>
                     </div>
                     <!-- 血压 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1621885126830587909~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780607&amp;x-signature=9Z5kuKlJYrICVT0uvZvyEcR6eSk%3D" alt="血压" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">血压</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p3-doubao-search-sign.byteimg.com/tos-cn-i-be4g95zd3a/1621885126830587909~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780607&amp;x-signature=9Z5kuKlJYrICVT0uvZvyEcR6eSk%3D" alt="血压" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">血压</span>
                     </div>
                     <!-- 足背动脉 -->
-                    <div class="examination-item border border-gray-200 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/44a4f563908601d7f616475221d411f7~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=1jV7Jn74j4QxZb3l6m0g%2FwH9kP5aF2tE" alt="足背动脉" class="w-12 h-12 mx-auto mb-2">
-                        <span class="text-sm font-medium">足背动脉</span>
+                    <div class="examination-item border border-gray-200 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/labis/44a4f563908601d7f616475221d411f7~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&amp;x-expires=1789780626&amp;x-signature=1jV7Jn74j4QxZb3l6m0g%2FwH9kP5aF2tE" alt="足背动脉" class="w-10 h-10 mx-auto mb-1">
+                        <span class="text-xs font-medium">足背动脉</span>
                     </div>
                     <!-- 自定义项目 -->
-                    <div class="examination-item border border-dashed border-gray-300 rounded-lg p-3 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
-                        <div class="w-12 h-12 mx-auto mb-2 flex items-center justify-center bg-gray-100 rounded-full">
-                            <i class="fa fa-plus text-gray-500 text-xl"></i>
+                    <div class="examination-item border border-dashed border-gray-300 rounded-lg p-2 text-center cursor-pointer hover:border-primary transition-all hover:shadow-md">
+                        <div class="w-10 h-10 mx-auto mb-1 flex items-center justify-center bg-gray-100 rounded-full">
+                            <i class="fa fa-plus text-gray-500 text-lg"></i>
                         </div>
-                        <span class="text-sm font-medium text-gray-500">自定义项目</span>
+                        <span class="text-xs font-medium text-gray-500">自定义项目</span>
                     </div>
                 </div>
             </div>
@@ -728,8 +728,17 @@
                 // 显示成功提示
                 showToast('照片保存成功');
                 
-                // 重置状态
-                resetCaptureState();
+                // 重置状态并重新启动摄像头
+                capturedImage = null;
+                previewImage.classList.add('hidden');
+                previewArea.classList.add('hidden');
+                retakeBtn.classList.add('hidden');
+                saveBtn.classList.add('hidden');
+                
+                // 延迟一秒后重新启动摄像头
+                setTimeout(() => {
+                    startCamera();
+                }, 1000);
             });
 
             // 自定义项目模态框
