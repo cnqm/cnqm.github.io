@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>基层慢病三色管理系统 · 高血压/糖尿病</title>
+  
+  <!-- 内联Tailwind CSS核心样式 -->
+  <script>
+    tailwind = {
+      config: {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe', 300: '#93c5fd',
+                400: '#60a5fa', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8',
+                800: '#1e40af', 900: '#1e3a8a'
+              },
+              medical: {
+                red: '#ef4444', yellow: '#eab308', green: '#22c55e', gray: '#6b7280'
+              }
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 内联Font Awesome -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  
+  <!-- 核心库 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  
+  <style>
+    /* 医疗系统专业配色 */
+    :root {
+      --med-blue: #2563eb;
+      --med-blue-light: #60a5fa;
+      --med-blue-dark: #1e40af;
+      --med-bg: #f0f9ff;
+      --med-card: #ffffff;
+      --med-text: #1e293b;
+      --med-border: #e2e8f0;
+    }
+    
+    .dark {
+      --med-bg: #0f172a;
+      --med-card: #1e293b;
+      --med-text: #f1f5f9;
+      --med-border: #334155;
+    }
+
+    body {
+      background-color: var(--med-bg);
+      color: var(--med-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    /* 自定义滚动条 */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #e2e8f0; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-track { background: #334155; }
+    .dark ::-webkit-scrollbar-thumb { background: #64748b; }
+
+    /* 卡片和阴影 */
+    .med-card {
+      background-color: var(--med-card);
+      border-radius: 12px;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+      border: 1px solid var(--med-border);
+    }
+
+    /* 按钮样式 */
+    .btn-primary {
+      background-color: var(--med-blue);
+      color: white;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background-color: var(--med-blue-dark); }
+    
+    .btn-secondary {
+      background-color: white;
+      border: 1px solid var(--med-border);
+      color: var(--med-text);
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { background-color: #f8fafc; border-color: var(--med-blue-light); }
+    
+    .dark .btn-secondary {
+      background-color: #334155;
+      border-color: #475569;
+      color: #f1f5f9;
+    }
+    .dark .btn-secondary:hover { background-color: #475569; }
+
+    /* 风险标签 */
+    .risk-tag {
+      padding: 4px 12px;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .risk-red { background-color: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .risk-yellow { background-color: #fefce8; color: #ca8a04; border: 1px solid #fef08a; }
+    .risk-green { background-color: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+    .risk-gray { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+    
+    .dark .risk-red { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+    .dark .risk-yellow { background-color: rgba(234, 179, 8, 0.2); color: #fde047; border-color: rgba(234, 179, 8, 0.3); }
+    .dark .risk-green { background-color: rgba(34, 197, 94, 0.2); color: #86efac; border-color: rgba(34, 197, 94, 0.3); }
+    .dark .risk-gray { background-color: rgba(107, 114, 128, 0.2); color: #d1d5db; border-color: rgba(107, 114, 128, 0.3); }
+
+    /* 统计卡片 */
+    .stat-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 20px;
+    }
+    .stat-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    /* 表格样式 */
+    .data-table th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--med-border);
+    }
+    .dark .data-table th { background-color: #334155; color: #cbd5e1; }
+    
+    .data-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--med-border);
+    }
+    
+    .table-row:hover { background-color: #f8fafc; }
+    .dark .table-row:hover { background-color: #334155; }
+
+    /* 筛选按钮 */
+    .filter-chip {
+      padding: 8px 16px;
+      border-radius: 9999px;
+      border: 1px solid var(--med-border);
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+    }
+    .filter-chip:hover { border-color: var(--med-blue-light); }
+    .filter-chip.active {
+      background-color: var(--med-blue);
+      color: white;
+      border-color: var(--med-blue);
+    }
+    
+    .dark .filter-chip { background-color: #334155; border-color: #475569; }
+    .dark .filter-chip:hover { border-color: var(--med-blue-light); }
+
+    /* 模态框 */
+    .modal-overlay {
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+    .modal-content {
+      background-color: var(--med-card);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      max-height: 90vh;
+      overflow: auto;
+    }
+
+    /* 上传区域 */
+    .upload-zone {
+      border: 2px dashed var(--med-border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      background-color: #f8fafc;
+    }
+    .upload-zone:hover {
+      border-color: var(--med-blue);
+      background-color: #eff6ff;
+    }
+    .dark .upload-zone { background-color: #334155; }
+    .dark .upload-zone:hover { background-color: #1e3a8a; border-color: var(--med-blue-light); }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      border: 1px solid var(--med-border);
+      background-color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .page-btn:hover { background-color: #f1f5f9; }
+    .page-btn.active {
+      background-color: var(--med-blue);
+      color: white;
+      border-color: var(--med-blue);
+    }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .dark .page-btn { background-color: #334155; border-color: #475569; }
+    .dark .page-btn:hover { background-color: #475569; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast-success { background-color: #22c55e; }
+    .toast-error { background-color: #ef4444; }
+    .toast-info { background-color: #3b82f6; }
+
+    /* 标签页 */
+    .tab-btn {
+      padding: 12px 20px;
+      font-weight: 500;
+      color: #64748b;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .tab-btn:hover { color: var(--med-blue); }
+    .tab-btn.active {
+      color: var(--med-blue);
+      border-bottom-color: var(--med-blue);
+    }
+
+    /* 侧边栏 */
+    .sidebar {
+      width: 280px;
+      background-color: var(--med-card);
+      border-right: 1px solid var(--med-border);
+      height: 100vh;
+      position: fixed;
+      left: 0;
+      top: 0;
+      transition: transform 0.3s ease;
+      z-index: 100;
+    }
+    .sidebar.collapsed { transform: translateX(-100%); }
+    
+    .main-content {
+      margin-left: 280px;
+      transition: margin-left 0.3s ease;
+      min-height: 100vh;
+    }
+    .main-content.expanded { margin-left: 0; }
+
+    @media (max-width: 1024px) {
+      .sidebar { transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .main-content { margin-left: 0; }
+    }
+
+    /* 深色模式辅助 */
+    .dark .bg-white { background-color: #1e293b !important; }
+    .dark .bg-gray-50 { background-color: #0f172a !important; }
+    .dark .bg-gray-100 { background-color: #334155 !important; }
+    .dark .text-gray-500 { color: #94a3b8 !important; }
+    .dark .text-gray-600 { color: #cbd5e1 !important; }
+    .dark .text-gray-700 { color: #e2e8f0 !important; }
+    .dark .text-gray-800 { color: #f1f5f9 !important; }
+    .dark .border-gray-200 { border-color: #334155 !important; }
+    .dark .border-gray-300 { border-color: #475563 !important; }
+    .dark input, .dark select, .dark textarea {
+      background-color: #334155;
+      border-color: #475563;
+      color: #f1f5f9;
+    }
+    .dark input::placeholder { color: #94a3b8; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- 侧边栏 -->
+  <aside id="sidebar" class="sidebar">
+    <div class="p-6 border-b border-gray-200 dark:border-gray-700">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-primary-600 flex items-center justify-center">
+          <i class="fa fa-heartbeat text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg text-gray-800 dark:text-white">慢病管理系统</h1>
+          <p class="text-xs text-gray-500">高血压 · 糖尿病</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="p-4">
+      <div class="space-y-1">
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 font-medium">
+          <i class="fa fa-dashboard w-5"></i>
+          数据概览
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <i class="fa fa-users w-5"></i>
+          患者管理
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <i class="fa fa-line-chart w-5"></i>
+          质控分析
+        </a>
+        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+          <i class="fa fa-file-text w-5"></i>
+          报表导出
+        </a>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+        <p class="px-4 text-xs font-semibold text-gray-400 uppercase mb-3">数据管理</p>
+        <div class="space-y-1">
+          <button id="backupBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fa fa-download w-5"></i>
+            备份数据
+          </button>
+          <button id="restoreBtn" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fa fa-upload w-5"></i>
+            恢复数据
+          </button>
+          <input type="file" id="restoreInput" accept=".json" class="hidden">
+        </div>
+      </div>
+    </nav>
+
+    <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 dark:border-gray-700">
+      <div class="flex items-center justify-between">
+        <span class="text-sm text-gray-500">深色模式</span>
+        <label class="relative inline-flex items-center cursor-pointer">
+          <input type="checkbox" id="themeToggle" class="sr-only peer">
+          <div class="w-11 h-6 bg-gray-300 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 主内容区 -->
+  <main id="mainContent" class="main-content">
+    <!-- 顶部栏 -->
+    <header class="sticky top-0 z-50 bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg border-b border-gray-200 dark:border-gray-700">
+      <div class="px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <button id="menuToggle" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fa fa-bars text-gray-600 dark:text-gray-300"></i>
+          </button>
+          <div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white">数据概览</h2>
+            <p class="text-sm text-gray-500" id="currentDate"></p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="settingsBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fa fa-cog text-gray-500 text-lg"></i>
+          </button>
+          <button id="helpBtn" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+            <i class="fa fa-question-circle text-gray-500 text-lg"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div class="p-6">
+      <!-- 风险等级图例 -->
+      <div class="flex flex-wrap items-center gap-4 mb-6">
+        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-medical-red"></span><span class="text-sm text-gray-600 dark:text-gray-300">高危 (红色)</span></span>
+        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-medical-yellow"></span><span class="text-sm text-gray-600 dark:text-gray-300">中危 (黄色)</span></span>
+        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-medical-green"></span><span class="text-sm text-gray-600 dark:text-gray-300">低危 (绿色)</span></span>
+        <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-medical-gray"></span><span class="text-sm text-gray-600 dark:text-gray-300">失访 (灰色)</span></span>
+      </div>
+
+      <!-- 统计卡片 -->
+      <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="med-card stat-card">
+          <div class="stat-icon bg-primary-100 dark:bg-primary-900/30 text-primary-600">
+            <i class="fa fa-users"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">管理人数</p>
+            <p class="text-2xl font-bold text-gray-800 dark:text-white" id="statTotal">0</p>
+          </div>
+        </div>
+        <div class="med-card stat-card">
+          <div class="stat-icon bg-red-100 dark:bg-red-900/30 text-red-500">
+            <i class="fa fa-exclamation-triangle"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">高危</p>
+            <p class="text-2xl font-bold text-red-600" id="statRed">0</p>
+          </div>
+        </div>
+        <div class="med-card stat-card">
+          <div class="stat-icon bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600">
+            <i class="fa fa-exclamation-circle"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">中危</p>
+            <p class="text-2xl font-bold text-yellow-600" id="statYellow">0</p>
+          </div>
+        </div>
+        <div class="med-card stat-card">
+          <div class="stat-icon bg-green-100 dark:bg-green-900/30 text-green-600">
+            <i class="fa fa-check-circle"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">低危</p>
+            <p class="text-2xl font-bold text-green-600" id="statGreen">0</p>
+          </div>
+        </div>
+        <div class="med-card stat-card">
+          <div class="stat-icon bg-gray-100 dark:bg-gray-700 text-gray-500">
+            <i class="fa fa-ban"></i>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">失访</p>
+            <p class="text-2xl font-bold text-gray-600" id="statLost">0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 图表区域 -->
+      <div class="grid lg:grid-cols-3 gap-6 mb-6">
+        <div class="med-card p-5 lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-semibold text-gray-800 dark:text-white">风险分布趋势</h3>
+            <select id="chartTimeRange" class="text-sm border rounded-lg px-3 py-1.5 bg-white dark:bg-gray-700 dark:border-gray-600">
+              <option value="all">全部时间</option>
+              <option value="6">近6个月</option>
+              <option value="12">近12个月</option>
+            </select>
+          </div>
+          <canvas id="riskDistChart" height="120"></canvas>
+        </div>
+        <div class="med-card p-5">
+          <h3 class="font-semibold text-gray-800 dark:text-white mb-4">疾病类型构成</h3>
+          <canvas id="diseaseTypeChart" height="200"></canvas>
+          <div class="mt-4 space-y-2">
+            <div class="flex items-center justify-between text-sm">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-primary-500"></span>高血压</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300" id="htCount">0</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-orange-500"></span>糖尿病</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300" id="dmCount">0</span>
+            </div>
+            <div class="flex items-center justify-between text-sm">
+              <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500"></span>两者兼有</span>
+              <span class="font-medium text-gray-700 dark:text-gray-300" id="bothCount">0</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数据导入区 -->
+      <div class="med-card p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="font-semibold text-lg text-gray-800 dark:text-white">
+            <i class="fa fa-cloud-upload text-primary-500 mr-2"></i>数据导入
+          </h3>
+          <div class="flex gap-2">
+            <button id="clearAllBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-trash-o mr-1"></i>清空数据
+            </button>
+            <button id="reEvaluateBtn" class="btn-primary px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-refresh mr-1"></i>重新评估
+            </button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- 高血压导入 -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="font-medium text-gray-700 dark:text-gray-300">
+                <i class="fa fa-heartbeat text-red-500 mr-1"></i>高血压随访
+              </h4>
+              <span id="htStatus" class="text-sm text-gray-500">未导入</span>
+            </div>
+            <div id="htDropZone" class="upload-zone">
+              <i class="fa fa-file-excel-o text-3xl text-green-500 mb-2"></i>
+              <p class="text-gray-600 dark:text-gray-300 font-medium">点击或拖拽上传 Excel</p>
+              <p class="text-xs text-gray-400 mt-1">支持 .xlsx, .xls, .csv</p>
+              <input type="file" id="htFileInput" accept=".csv,.xlsx,.xls" class="hidden">
+            </div>
+          </div>
+
+          <!-- 糖尿病导入 -->
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <h4 class="font-medium text-gray-700 dark:text-gray-300">
+                <i class="fa fa-tint text-orange-500 mr-1"></i>糖尿病随访
+              </h4>
+              <span id="dmStatus" class="text-sm text-gray-500">未导入</span>
+            </div>
+            <div id="dmDropZone" class="upload-zone">
+              <i class="fa fa-file-excel-o text-3xl text-green-500 mb-2"></i>
+              <p class="text-gray-600 dark:text-gray-300 font-medium">点击或拖拽上传 Excel</p>
+              <p class="text-xs text-gray-400 mt-1">支持 .xlsx, .xls, .csv</p>
+              <input type="file" id="dmFileInput" accept=".csv,.xlsx,.xls" class="hidden">
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据质量检查 -->
+        <div id="dataQualitySection" class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 hidden">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="font-medium text-gray-700 dark:text-gray-300">
+              <i class="fa fa-check-square-o text-primary-500 mr-1"></i>数据质量检查
+            </h4>
+            <button id="showQualityIssues" class="text-sm text-primary-600 hover:text-primary-700">
+              查看详情 <i class="fa fa-angle-right ml-1"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p class="text-sm text-gray-500">完整记录</p>
+              <p class="text-xl font-bold text-green-600" id="qualityComplete">0</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p class="text-sm text-gray-500">缺少血压</p>
+              <p class="text-xl font-bold text-yellow-600" id="qualityNoBp">0</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p class="text-sm text-gray-500">缺少血糖</p>
+              <p class="text-xl font-bold text-orange-600" id="qualityNoGlu">0</p>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+              <p class="text-sm text-gray-500">完全失访</p>
+              <p class="text-xl font-bold text-red-600" id="qualityLost">0</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 高级筛选 -->
+      <div class="med-card p-6 mb-6">
+        <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+          <h3 class="font-semibold text-lg text-gray-800 dark:text-white">
+            <i class="fa fa-filter text-primary-500 mr-2"></i>筛选与查询
+          </h3>
+          <div class="flex items-center gap-2">
+            <span class="text-sm text-gray-500" id="resultCount">共 0 位患者</span>
+            <button id="exportBtn" class="btn-primary px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-download mr-1"></i>导出列表
+            </button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-4 gap-4 mb-4">
+          <div class="relative">
+            <i class="fa fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+            <input type="text" id="searchInput" placeholder="搜索档案号/姓名" 
+              class="w-full pl-10 pr-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-primary-300 focus:border-primary-500 outline-none">
+          </div>
+          <select id="villageFilter" class="px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
+            <option value="">全部村/居委会</option>
+          </select>
+          <select id="doctorFilter" class="px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
+            <option value="">全部随访医生</option>
+          </select>
+          <select id="diseaseFilter" class="px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
+            <option value="">全部疾病类型</option>
+            <option value="ht">仅高血压</option>
+            <option value="dm">仅糖尿病</option>
+            <option value="both">两者兼有</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button class="filter-chip active" data-filter="all">全部</button>
+          <button class="filter-chip" data-filter="red">高危</button>
+          <button class="filter-chip" data-filter="yellow">中危</button>
+          <button class="filter-chip" data-filter="green">低危</button>
+          <button class="filter-chip" data-filter="lost">失访</button>
+        </div>
+      </div>
+
+      <!-- 批量操作栏 -->
+      <div id="batchActions" class="med-card p-4 mb-6 hidden">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-600 dark:text-gray-300">
+              已选择 <span id="selectedCount" class="font-bold text-primary-600">0</span> 人
+            </span>
+            <button id="clearSelection" class="text-sm text-gray-500 hover:text-gray-700">
+              取消选择
+            </button>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button id="batchExportBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-file-excel-o mr-1"></i>批量导出
+            </button>
+            <button id="batchRiskBtn" class="btn-secondary px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-flag mr-1"></i>修改风险等级
+            </button>
+            <button id="batchDeleteBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+              <i class="fa fa-trash mr-1"></i>删除
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 患者列表 -->
+      <div class="med-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[900px] data-table">
+            <thead>
+              <tr>
+                <th class="w-12">
+                  <input type="checkbox" id="selectAll" class="rounded dark:bg-gray-600">
+                </th>
+                <th>档案号</th>
+                <th>姓名</th>
+                <th>性别</th>
+                <th>年龄</th>
+                <th>慢病类型</th>
+                <th>村/居委会</th>
+                <th>最高收缩压</th>
+                <th>最高舒张压</th>
+                <th>最高血糖</th>
+                <th>风险等级</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="emptyState" class="p-12 text-center hidden">
+          <i class="fa fa-folder-open text-4xl text-gray-300 mb-4"></i>
+          <p class="text-gray-500 mb-2">暂无患者数据</p>
+          <p class="text-sm text-gray-400">请在上方导入高血压或糖尿病随访记录</p>
+        </div>
+
+        <!-- 分页 -->
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-500">每页显示</span>
+            <select id="pageSizeSelect" class="border rounded-lg px-3 py-1.5 text-sm bg-white dark:bg-gray-700 dark:border-gray-600">
+              <option value="10">10条</option>
+              <option value="20">20条</option>
+              <option value="50">50条</option>
+              <option value="100">100条</option>
+            </select>
+          </div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+      </div>
+
+      <footer class="mt-8 text-center text-sm text-gray-400 pb-8">
+        <p><i class="fa fa-hospital-o mr-1"></i>基层慢病三色管理系统 · 支持自定义评估标准</p>
+      </footer>
+    </div>
+  </main>
+
+  <!-- 患者详情模态框 -->
+  <div id="detailModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" id="detailModalOverlay"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="modal-content w-full max-w-4xl">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-gray-800 dark:text-white" id="modalTitle">患者详情</h2>
+            <p class="text-sm text-gray-500" id="modalSubtitle"></p>
+          </div>
+          <button id="closeModal" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <i class="fa fa-times text-gray-500 text-xl"></i>
+          </button>
+        </div>
+        
+        <div class="p-6">
+          <!-- 基本信息 -->
+          <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5 mb-6">
+            <div class="flex items-start justify-between mb-4">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center">
+                  <i class="fa fa-user text-primary-600 text-2xl"></i>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-gray-800 dark:text-white" id="detailName">姓名</h3>
+                  <p class="text-sm text-gray-500" id="detailId">档案号</p>
+                </div>
+              </div>
+              <div id="detailRiskTag" class="risk-tag risk-green">低危</div>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div><span class="text-gray-500">性别：</span><span id="detailGender" class="font-medium"></span></div>
+              <div><span class="text-gray-500">年龄：</span><span id="detailAge" class="font-medium"></span></div>
+              <div><span class="text-gray-500">类型：</span><span id="detailType" class="font-medium"></span></div>
+              <div><span class="text-gray-500">随访医生：</span><span id="detailDoctor" class="font-medium"></span></div>
+              <div class="col-span-2"><span class="text-gray-500">联系电话：</span><span id="detailPhone" class="font-medium"></span></div>
+              <div class="col-span-2"><span class="text-gray-500">住址：</span><span id="detailAddress" class="font-medium"></span></div>
+            </div>
+          </div>
+
+          <!-- 趋势图 -->
+          <div class="grid md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+              <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <i class="fa fa-heartbeat text-red-500 mr-1"></i>血压趋势
+              </h4>
+              <canvas id="bpChart" height="150"></canvas>
+            </div>
+            <div class="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-5">
+              <h4 class="font-medium text-gray-700 dark:text-gray-300 mb-3">
+                <i class="fa fa-tint text-orange-500 mr-1"></i>血糖趋势
+              </h4>
+              <canvas id="gluChart" height="150"></canvas>
+            </div>
+          </div>
+
+          <!-- 随访记录 -->
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-medium text-gray-700 dark:text-gray-300">
+              <i class="fa fa-history text-primary-500 mr-1"></i>随访记录
+            </h4>
+            <button id="exportPatientPdf" class="text-sm text-primary-600 hover:text-primary-700">
+              <i class="fa fa-file-pdf-o mr-1"></i>导出记录
+            </button>
+          </div>
+          <div class="border border-gray-200 dark:border-gray-600 rounded-xl overflow-hidden">
+            <div class="overflow-x-auto max-h-80">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-100 dark:bg-gray-700 sticky top-0">
+                  <tr>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">日期</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">方式</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">收缩压</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">舒张压</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">心率</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">空腹血糖</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">随机血糖</th>
+                    <th class="p-3 text-left text-gray-600 dark:text-gray-300 font-medium">分类</th>
+                  </tr>
+                </thead>
+                <tbody id="followupBody" class="divide-y divide-gray-200 dark:divide-gray-600"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div id="settingsModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" id="settingsModalOverlay"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="modal-content w-full max-w-2xl">
+        <div class="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-white">
+            <i class="fa fa-sliders mr-2 text-primary-500"></i>系统设置
+          </h2>
+          <button id="closeSettings" class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            <i class="fa fa-times text-gray-500 text-xl"></i>
+          </button>
+        </div>
+        
+        <div class="p-6 space-y-6">
+          <!-- 高血压标准 -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-xl p-5">
+            <h3 class="font-semibold text-lg mb-4 text-red-600">
+              <i class="fa fa-heartbeat mr-1"></i>高血压分级标准
+            </h3>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">红色高危阈值</label>
+                <div class="flex items-center gap-2">
+                  <input id="htRedSbp" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                  <span class="text-gray-500">/</span>
+                  <input id="htRedDbp" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                  <span class="text-gray-500">mmHg</span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1">收缩压 ≥ 180 或 舒张压 ≥ 110</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">黄色中危阈值</label>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <input id="htYellowSbpLow" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">-</span>
+                    <input id="htYellowSbpHigh" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmHg</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <input id="htYellowDbpLow" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">-</span>
+                    <input id="htYellowDbpHigh" type="number" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmHg</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 糖尿病标准 -->
+          <div class="border border-gray-200 dark:border-gray-600 rounded-xl p-5">
+            <h3 class="font-semibold text-lg mb-4 text-orange-600">
+              <i class="fa fa-tint mr-1"></i>糖尿病分级标准
+            </h3>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">红色高危阈值</label>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">空腹 ≥</span>
+                    <input id="dmRedFasting" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmol/L</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">随机 ≥</span>
+                    <input id="dmRedRandom" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmol/L</span>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">黄色中危阈值</label>
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">空腹</span>
+                    <input id="dmYellowFastingLow" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">-</span>
+                    <input id="dmYellowFastingHigh" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmol/L</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="text-gray-500">随机</span>
+                    <input id="dmYellowRandomLow" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">-</span>
+                    <input id="dmYellowRandomHigh" type="number" step="0.1" class="w-24 border rounded-lg px-3 py-2 bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <span class="text-gray-500">mmol/L</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button id="resetSettings" class="btn-secondary px-5 py-2.5 rounded-lg">重置默认</button>
+            <button id="saveSettings" class="btn-primary px-5 py-2.5 rounded-lg">保存设置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 帮助模态框 -->
+  <div id="helpModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" id="helpModalOverlay"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="modal-content w-full max-w-lg">
+        <div class="p-6">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+            <i class="fa fa-info-circle text-primary-500 mr-2"></i>使用说明
+          </h2>
+          <div class="space-y-4 text-gray-600 dark:text-gray-300">
+            <div>
+              <h3 class="font-medium text-gray-800 dark:text-white mb-1">📊 数据导入</h3>
+              <p class="text-sm">支持智能表头识别，包含档案号、姓名、血压、血糖等字段即可。</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-800 dark:text-white mb-1">🎯 评估规则</h3>
+              <p class="text-sm">根据最高血压/血糖值自动分级，可在设置中自定义阈值。</p>
+            </div>
+            <div>
+              <h3 class="font-medium text-gray-800 dark:text-white mb-1">💾 数据备份</h3>
+              <p class="text-sm">定期备份数据，防止意外丢失。备份文件为JSON格式。</p>
+            </div>
+          </div>
+          <button id="closeHelp" class="btn-primary w-full mt-6 py-2.5 rounded-lg">知道了</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量修改风险模态框 -->
+  <div id="batchRiskModal" class="fixed inset-0 z-50 hidden">
+    <div class="modal-overlay absolute inset-0" id="batchRiskModalOverlay"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="modal-content w-full max-w-md">
+        <div class="p-6">
+          <h2 class="text-xl font-bold text-gray-800 dark:text-white mb-4">
+            <i class="fa fa-flag text-primary-500 mr-2"></i>修改风险等级
+          </h2>
+          <p class="text-gray-600 dark:text-gray-300 mb-6">将选中的 <span id="batchRiskCount" class="font-bold text-primary-600">0</span> 位患者的风险等级修改为：</p>
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <button class="risk-btn p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-center hover:border-red-500 transition" data-risk="red">
+              <span class="risk-tag risk-red inline-block mb-2">高危</span>
+              <p class="text-sm text-gray-500">红色管理</p>
+            </button>
+            <button class="risk-btn p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-center hover:border-yellow-500 transition" data-risk="yellow">
+              <span class="risk-tag risk-yellow inline-block mb-2">中危</span>
+              <p class="text-sm text-gray-500">黄色管理</p>
+            </button>
+            <button class="risk-btn p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-center hover:border-green-500 transition" data-risk="green">
+              <span class="risk-tag risk-green inline-block mb-2">低危</span>
+              <p class="text-sm text-gray-500">绿色管理</p>
+            </button>
+            <button class="risk-btn p-4 border-2 border-gray-200 dark:border-gray-600 rounded-xl text-center hover:border-gray-500 transition" data-risk="lost">
+              <span class="risk-tag risk-gray inline-block mb-2">失访</span>
+              <p class="text-sm text-gray-500">标记失访</p>
+            </button>
+          </div>
+          <div class="flex gap-3">
+            <button id="cancelBatchRisk" class="btn-secondary flex-1 py-2.5 rounded-lg">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== 默认设置 =====
+      const DEFAULT_SETTINGS = {
+        htRedSbp: 180, htRedDbp: 110,
+        htYellowSbpLow: 160, htYellowSbpHigh: 179,
+        htYellowDbpLow: 100, htYellowDbpHigh: 109,
+        dmRedFasting: 11.1, dmRedRandom: 16.7,
+        dmYellowFastingLow: 7.0, dmYellowFastingHigh: 11.0,
+        dmYellowRandomLow: 10.0, dmYellowRandomHigh: 16.6,
+      };
+      let settings = { ...DEFAULT_SETTINGS };
+
+      // ===== 字段映射 =====
+      const FIELD_ALIASES = {
+        档案号: ['档案号','病历号','患者编号','id','档案id','编号','patientid'],
+        姓名: ['姓名','患者姓名','name','名字'],
+        性别: ['性别','sex','gender'],
+        年龄: ['年龄','age','周岁'],
+        身份证号: ['身份证号','身份证','idcard','id number'],
+        本人电话: ['本人电话','电话','联系电话','手机','phone'],
+        联系人电话: ['联系人电话','联系人','紧急联系人'],
+        村居委会: ['村(居委会)名称','村居委会','村/居委会','居委会','村'],
+        现住址组: ['现住址组','住址','地址','现住址','address'],
+        随访日期: ['随访日期','日期','随访时间','date','时间'],
+        随访方式: ['随访方式','方式','门诊/住院','type'],
+        收缩压: ['收缩压','sbp','高压'],
+        舒张压: ['舒张压','dbp','低压'],
+        心率: ['心率','heart rate','hr'],
+        此次随访分类: ['此次随访分类','随访分类','分类'],
+        随访医生: ['随访医生','医生','doctor'],
+        失访原因: ['失访原因','失访'],
+        空腹血糖值: ['空腹血糖','空腹血糖值','fbg','空腹'],
+        随机血糖值: ['随机血糖','随机血糖值','rbg','随机'],
+        胰岛素: ['胰岛素','insulin'],
+      };
+
+      // ===== 状态 =====
+      let htRecords = [], dmRecords = [], patientsMap = new Map();
+      let filteredIds = [], currentPage = 1, pageSize = 10;
+      let searchTerm = '', riskFilter = 'all', villageFilter = '', doctorFilter = '', diseaseFilter = '';
+      let selectedIds = new Set(), manualRiskOverrides = new Map();
+      let chartInstances = { main: null, pie: null, bp: null, glu: null };
+      let currentDetailId = null, sidebarOpen = false;
+
+      // ===== DOM 元素 =====
+      const $ = (id) => document.getElementById(id);
+      const dom = {
+        sidebar: $('sidebar'),
+        mainContent: $('mainContent'),
+        menuToggle: $('menuToggle'),
+        themeToggle: $('themeToggle'),
+        currentDate: $('currentDate'),
+        
+        // 统计
+        statTotal: $('statTotal'), statRed: $('statRed'), statYellow: $('statYellow'),
+        statGreen: $('statGreen'), statLost: $('statLost'),
+        htCount: $('htCount'), dmCount: $('dmCount'), bothCount: $('bothCount'),
+        
+        // 导入
+        htDropZone: $('htDropZone'), htFileInput: $('htFileInput'), htStatus: $('htStatus'),
+        dmDropZone: $('dmDropZone'), dmFileInput: $('dmFileInput'), dmStatus: $('dmStatus'),
+        clearAllBtn: $('clearAllBtn'), reEvaluateBtn: $('reEvaluateBtn'),
+        
+        // 数据质量
+        dataQualitySection: $('dataQualitySection'),
+        qualityComplete: $('qualityComplete'), qualityNoBp: $('qualityNoBp'),
+        qualityNoGlu: $('qualityNoGlu'), qualityLost: $('qualityLost'),
+        
+        // 筛选
+        searchInput: $('searchInput'), villageFilter: $('villageFilter'),
+        doctorFilter: $('doctorFilter'), diseaseFilter: $('diseaseFilter'),
+        filterChips: document.querySelectorAll('.filter-chip'),
+        resultCount: $('resultCount'),
+        
+        // 批量操作
+        batchActions: $('batchActions'), selectedCount: $('selectedCount'),
+        clearSelection: $('clearSelection'), batchExportBtn: $('batchExportBtn'),
+        batchRiskBtn: $('batchRiskBtn'), batchDeleteBtn: $('batchDeleteBtn'),
+        
+        // 表格
+        tableBody: $('tableBody'), emptyState: $('emptyState'),
+        selectAll: $('selectAll'), pageSizeSelect: $('pageSizeSelect'),
+        pagination: $('pagination'),
+        
+        // 模态框
+        detailModal: $('detailModal'), detailModalOverlay: $('detailModalOverlay'),
+        closeModal: $('closeModal'), modalTitle: $('modalTitle'), modalSubtitle: $('modalSubtitle'),
+        detailName: $('detailName'), detailId: $('detailId'), detailGender: $('detailGender'),
+        detailAge: $('detailAge'), detailType: $('detailType'), detailDoctor: $('detailDoctor'),
+        detailPhone: $('detailPhone'), detailAddress: $('detailAddress'), detailRiskTag: $('detailRiskTag'),
+        followupBody: $('followupBody'), exportPatientPdf: $('exportPatientPdf'),
+        bpChart: $('bpChart'), gluChart: $('gluChart'),
+        
+        // 设置
+        settingsBtn: $('settingsBtn'), settingsModal: $('settingsModal'),
+        settingsModalOverlay: $('settingsModalOverlay'), closeSettings: $('closeSettings'),
+        saveSettings: $('saveSettings'), resetSettings: $('resetSettings'),
+        
+        // 帮助
+        helpBtn: $('helpBtn'), helpModal: $('helpModal'),
+        helpModalOverlay: $('helpModalOverlay'), closeHelp: $('closeHelp'),
+        
+        // 备份恢复
+        backupBtn: $('backupBtn'), restoreBtn: $('restoreBtn'), restoreInput: $('restoreInput'),
+        
+        // 导出
+        exportBtn: $('exportBtn'),
+        
+        // 图表
+        riskDistChart: $('riskDistChart'), diseaseTypeChart: $('diseaseTypeChart'),
+        chartTimeRange: $('chartTimeRange'),
+        
+        // 批量风险
+        batchRiskModal: $('batchRiskModal'), batchRiskModalOverlay: $('batchRiskModalOverlay'),
+        batchRiskCount: $('batchRiskCount'), cancelBatchRisk: $('cancelBatchRisk'),
+        riskBtns: document.querySelectorAll('.risk-btn'),
+        
+        // Toast
+        toast: $('toast'),
+      };
+
+      // ===== 工具函数 =====
+      function showToast(msg, type = 'info') {
+        dom.toast.textContent = msg;
+        dom.toast.className = `toast toast-${type}`;
+        dom.toast.offsetHeight; // 触发重绘
+        dom.toast.classList.add('show');
+        setTimeout(() => dom.toast.classList.remove('show'), 3000);
+      }
+
+      function initTheme() {
+        const isDark = localStorage.getItem('theme') === 'dark';
+        document.documentElement.classList.toggle('dark', isDark);
+        dom.themeToggle.checked = isDark;
+      }
+
+      function toggleTheme() {
+        const isDark = dom.themeToggle.checked;
+        document.documentElement.classList.toggle('dark', isDark);
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      }
+
+      function toggleSidebar() {
+        sidebarOpen = !sidebarOpen;
+        if (window.innerWidth < 1024) {
+          dom.sidebar.classList.toggle('open', sidebarOpen);
+        } else {
+          dom.sidebar.classList.toggle('collapsed', !sidebarOpen);
+          dom.mainContent.classList.toggle('expanded', !sidebarOpen);
+        }
+      }
+
+      function formatDate() {
+        const now = new Date();
+        return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
+      }
+
+      // ===== 设置管理 =====
+      function loadSettings() {
+        const saved = localStorage.getItem('tricolorSettings');
+        if (saved) {
+          try { settings = { ...DEFAULT_SETTINGS, ...JSON.parse(saved) }; } catch(e) {}
+        }
+        for (let k in DEFAULT_SETTINGS) {
+          if ($(k)) $(k).value = settings[k];
+        }
+      }
+
+      function saveSettingsToStorage() {
+        for (let k in DEFAULT_SETTINGS) {
+          if ($(k)) settings[k] = parseFloat($(k).value) || DEFAULT_SETTINGS[k];
+        }
+        localStorage.setItem('tricolorSettings', JSON.stringify(settings));
+        showToast('设置已保存', 'success');
+      }
+
+      function resetSettings() {
+        settings = { ...DEFAULT_SETTINGS };
+        for (let k in DEFAULT_SETTINGS) {
+          if ($(k)) $(k).value = settings[k];
+        }
+        showToast('已重置为默认设置', 'info');
+      }
+
+      // ===== 字段映射 =====
+      const norm = s => String(s).trim().replace(/\s+/g, '').toLowerCase();
+      
+      function buildHeaderMap(headerRow) {
+        const map = new Map();
+        if (!headerRow) return map;
+        headerRow.forEach((cell, idx) => {
+          const n = norm(cell);
+          if (!n) return;
+          for (let [std, aliases] of Object.entries(FIELD_ALIASES)) {
+            if (aliases.some(a => norm(a) === n)) {
+              map.set(std, idx);
+              break;
+            }
+          }
+        });
+        return map;
+      }
+
+      function getField(row, map, field, def = null) {
+        const idx = map.get(field);
+        if (idx === undefined || idx >= row.length) return def;
+        const v = row[idx];
+        return (v === undefined || v === null || (typeof v === 'string' && v.trim() === '')) ? def : v;
+      }
+
+      // ===== 风险评估 =====
+      function evaluateRisk(p) {
+        // 检查手动覆盖
+        if (manualRiskOverrides.has(p.档案号)) {
+          return manualRiskOverrides.get(p.档案号);
+        }
+        
+        if (!p.hasValidBp && !p.hasValidGlu) return 'lost';
+        
+        let htRisk = 'green', dmRisk = 'green';
+        
+        if (p.hasValidBp) {
+          const sbp = p.maxSbp, dbp = p.maxDbp;
+          if (sbp >= settings.htRedSbp || dbp >= settings.htRedDbp) htRisk = 'red';
+          else if ((sbp >= settings.htYellowSbpLow && sbp <= settings.htYellowSbpHigh) ||
+                   (dbp >= settings.htYellowDbpLow && dbp <= settings.htYellowDbpHigh)) htRisk = 'yellow';
+          else htRisk = 'green';
+        }
+        
+        if (p.hasValidGlu) {
+          const glu = p.maxGlu;
+          const maxRandom = Math.max(...p.records.map(r => r.随机血糖值 || 0));
+          if (glu >= settings.dmRedFasting || maxRandom >= settings.dmRedRandom) dmRisk = 'red';
+          else if ((glu >= settings.dmYellowFastingLow && glu <= settings.dmYellowFastingHigh) ||
+                   (maxRandom >= settings.dmYellowRandomLow && maxRandom <= settings.dmYellowRandomHigh)) dmRisk = 'yellow';
+          else dmRisk = 'green';
+        }
+        
+        if (!p.ht) return dmRisk;
+        if (!p.dm) return htRisk;
+        if (htRisk === 'red' || dmRisk === 'red') return 'red';
+        if (htRisk === 'green' && dmRisk === 'green') return 'green';
+        return 'yellow';
+      }
+
+      // ===== Excel 解析 =====
+      async function parseFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            try {
+              const data = new Uint8Array(e.target.result);
+              const wb = XLSX.read(data, { type: 'array' });
+              const sheet = wb.Sheets[wb.SheetNames[0]];
+              const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+              if (rows.length < 2) reject('文件中没有数据');
+              resolve(rows);
+            } catch (err) { reject(err); }
+          };
+          reader.readAsArrayBuffer(file);
+        });
+      }
+
+      function processRecord(row, map, type) {
+        return {
+          type,
+          档案号: String(getField(row, map, '档案号', '')).trim(),
+          姓名: String(getField(row, map, '姓名', '')).trim(),
+          性别: String(getField(row, map, '性别', '')),
+          年龄: parseInt(getField(row, map, '年龄', 0)) || 0,
+          身份证号: String(getField(row, map, '身份证号', '')),
+          本人电话: String(getField(row, map, '本人电话', '')),
+          联系人电话: String(getField(row, map, '联系人电话', '')),
+          村居委会: String(getField(row, map, '村居委会', '')),
+          现住址组: String(getField(row, map, '现住址组', '')),
+          随访日期: String(getField(row, map, '随访日期', '')),
+          随访方式: String(getField(row, map, '随访方式', '')),
+          收缩压: parseFloat(getField(row, map, '收缩压', 0)) || 0,
+          舒张压: parseFloat(getField(row, map, '舒张压', 0)) || 0,
+          心率: String(getField(row, map, '心率', '')),
+          此次随访分类: String(getField(row, map, '此次随访分类', '')),
+          随访医生: String(getField(row, map, '随访医生', '')),
+          失访原因: String(getField(row, map, '失访原因', '')),
+          空腹血糖值: type === 'dm' ? (parseFloat(getField(row, map, '空腹血糖值', null)) || null) : null,
+          随机血糖值: type === 'dm' ? (parseFloat(getField(row, map, '随机血糖值', null)) || null) : null,
+          胰岛素: type === 'dm' ? String(getField(row, map, '胰岛素', '')) : null,
+        };
+      }
+
+      async function importHt(file) {
+        try {
+          const rows = await parseFile(file);
+          const map = buildHeaderMap(rows[0]);
+          const newRec = [];
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r) continue;
+            const rec = processRecord(r, map, 'ht');
+            if (rec.档案号 && rec.姓名) newRec.push(rec);
+          }
+          htRecords = [...htRecords, ...newRec];
+          dom.htStatus.textContent = `已导入 ${htRecords.length} 条`;
+          rebuild();
+          showToast(`成功导入高血压 ${newRec.length} 条`, 'success');
+        } catch (e) {
+          showToast('导入失败: ' + (e.message || '未知错误'), 'error');
+        }
+      }
+
+      async function importDm(file) {
+        try {
+          const rows = await parseFile(file);
+          const map = buildHeaderMap(rows[0]);
+          const newRec = [];
+          for (let i = 1; i < rows.length; i++) {
+            const r = rows[i];
+            if (!r) continue;
+            const rec = processRecord(r, map, 'dm');
+            if (rec.档案号 && rec.姓名) newRec.push(rec);
+          }
+          dmRecords = [...dmRecords, ...newRec];
+          dom.dmStatus.textContent = `已导入 ${dmRecords.length} 条`;
+          rebuild();
+          showToast(`成功导入糖尿病 ${newRec.length} 条`, 'success');
+        } catch (e) {
+          showToast('导入失败: ' + (e.message || '未知错误'), 'error');
+        }
+      }
+
+      // ===== 数据重建 =====
+      function rebuild() {
+        const all = [...htRecords, ...dmRecords];
+        const map = new Map();
+        const villages = new Set(), doctors = new Set();
+
+        all.forEach(r => {
+          const id = r.档案号;
+          if (!map.has(id)) {
+            map.set(id, {
+              档案号: id, 姓名: r.姓名, 性别: r.性别, 年龄: r.年龄,
+              身份证号: r.身份证号, 本人电话: r.本人电话, 联系人电话: r.联系人电话,
+              村居委会: r.村居委会, 现住址组: r.现住址组, 失访原因: r.失访原因,
+              ht: false, dm: false, maxSbp: 0, maxDbp: 0, maxGlu: null,
+              records: [], hasValidBp: false, hasValidGlu: false
+            });
+          }
+          const p = map.get(id);
+          if (r.type === 'ht') p.ht = true; else p.dm = true;
+          
+          const sbp = r.收缩压 || 0, dbp = r.舒张压 || 0;
+          if (sbp > 0 || dbp > 0) p.hasValidBp = true;
+          p.maxSbp = Math.max(p.maxSbp, sbp);
+          p.maxDbp = Math.max(p.maxDbp, dbp);
+          
+          const glu = r.空腹血糖值 ?? r.随机血糖值;
+          if (glu !== null && glu > 0) p.hasValidGlu = true;
+          if (glu !== null && (p.maxGlu === null || glu > p.maxGlu)) p.maxGlu = glu;
+          
+          if (r.失访原因) p.失访原因 = r.失访原因;
+          if (r.村居委会) { p.村居委会 = r.村居委会; villages.add(r.村居委会); }
+          if (r.随访医生) { p.随访医生 = r.随访医生; doctors.add(r.随访医生); }
+          if (!p.性别 && r.性别) p.性别 = r.性别;
+          if (!p.年龄 && r.年龄) p.年龄 = r.年龄;
+          
+          p.records.push(r);
+        });
+
+        for (let p of map.values()) {
+          p.risk = evaluateRisk(p);
+          p.typeStr = (p.ht && p.dm) ? '两者' : (p.ht ? '高血压' : '糖尿病');
+        }
+
+        patientsMap = map;
+        
+        // 更新筛选下拉
+        updateFilterDropdowns(villages, doctors);
+        
+        applyFiltersAndSearch();
+        updateStats();
+        updateDataQuality();
+        renderCharts();
+        saveDataToLocal();
+      }
+
+      function updateFilterDropdowns(villages, doctors) {
+        // 村居委会
+        dom.villageFilter.innerHTML = '<option value="">全部村/居委会</option>';
+        [...villages].sort().forEach(v => {
+          const opt = document.createElement('option');
+          opt.value = v; opt.textContent = v;
+          dom.villageFilter.appendChild(opt);
+        });
+        
+        // 医生
+        dom.doctorFilter.innerHTML = '<option value="">全部随访医生</option>';
+        [...doctors].sort().forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d; opt.textContent = d;
+          dom.doctorFilter.appendChild(opt);
+        });
+      }
+
+      function updateStats() {
+        const vals = [...patientsMap.values()];
+        let r = 0, y = 0, g = 0, l = 0, ht = 0, dm = 0, both = 0;
+        vals.forEach(p => {
+          if (p.risk === 'lost') l++;
+          else if (p.risk === 'red') r++;
+          else if (p.risk === 'yellow') y++;
+          else g++;
+          
+          if (p.ht && p.dm) both++;
+          else if (p.ht) ht++;
+          else dm++;
+        });
+        dom.statTotal.textContent = vals.length - l;
+        dom.statRed.textContent = r;
+        dom.statYellow.textContent = y;
+        dom.statGreen.textContent = g;
+        dom.statLost.textContent = l;
+        dom.htCount.textContent = ht;
+        dom.dmCount.textContent = dm;
+        dom.bothCount.textContent = both;
+      }
+
+      function updateDataQuality() {
+        if (patientsMap.size === 0) {
+          dom.dataQualitySection.classList.add('hidden');
+          return;
+        }
+        dom.dataQualitySection.classList.remove('hidden');
+        
+        let complete = 0, noBp = 0, noGlu = 0, lost = 0;
+        patientsMap.forEach(p => {
+          if (p.risk === 'lost') lost++;
+          else if (p.hasValidBp && (p.hasValidGlu || !p.dm) && (p.hasValidBp || !p.ht)) complete++;
+          else if (!p.hasValidBp && p.ht) noBp++;
+          else if (!p.hasValidGlu && p.dm) noGlu++;
+        });
+        
+        dom.qualityComplete.textContent = complete;
+        dom.qualityNoBp.textContent = noBp;
+        dom.qualityNoGlu.textContent = noGlu;
+        dom.qualityLost.textContent = lost;
+      }
+
+      // ===== 筛选与搜索 =====
+      function applyFiltersAndSearch() {
+        const term = searchTerm.toLowerCase();
+        let ids = [...patientsMap.keys()];
+        
+        if (riskFilter !== 'all') {
+          ids = ids.filter(id => patientsMap.get(id).risk === riskFilter);
+        }
+        if (villageFilter) {
+          ids = ids.filter(id => patientsMap.get(id).村居委会 === villageFilter);
+        }
+        if (doctorFilter) {
+          ids = ids.filter(id => {
+            const p = patientsMap.get(id);
+            return p.records.some(r => r.随访医生 === doctorFilter);
+          });
+        }
+        if (diseaseFilter) {
+          ids = ids.filter(id => {
+            const p = patientsMap.get(id);
+            if (diseaseFilter === 'ht') return p.ht && !p.dm;
+            if (diseaseFilter === 'dm') return p.dm && !p.ht;
+            if (diseaseFilter === 'both') return p.ht && p.dm;
+            return true;
+          });
+        }
+        
+        filteredIds = ids.filter(id => {
+          const p = patientsMap.get(id);
+          return p.档案号.toLowerCase().includes(term) ||
+                 p.姓名.toLowerCase().includes(term) ||
+                 (p.村居委会 && p.村居委会.toLowerCase().includes(term));
+        });
+        
+        currentPage = 1;
+        selectedIds.clear();
+        updateBatchActions();
+        renderTable();
+        dom.resultCount.textContent = `共 ${filteredIds.length} 位患者`;
+        renderPagination();
+      }
+
+      // ===== 表格渲染 =====
+      function renderTable() {
+        const start = (currentPage - 1) * pageSize;
+        const pageIds = filteredIds.slice(start, start + pageSize);
+        
+        if (pageIds.length === 0 && filteredIds.length === 0) {
+          dom.tableBody.innerHTML = '';
+          dom.emptyState.classList.remove('hidden');
+          dom.selectAll.checked = false;
+          return;
+        }
+        
+        dom.emptyState.classList.add('hidden');
+        
+        dom.tableBody.innerHTML = pageIds.map(id => {
+          const p = patientsMap.get(id);
+          const riskClass = p.risk === 'lost' ? 'risk-gray' :
+                           p.risk === 'red' ? 'risk-red' :
+                           p.risk === 'yellow' ? 'risk-yellow' : 'risk-green';
+          const riskText = p.risk === 'lost' ? '失访' :
+                          p.risk === 'red' ? '高危' :
+                          p.risk === 'yellow' ? '中危' : '低危';
+          
+          const typeBadge = p.typeStr === '两者' ? 
+            '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary-500"></span><span class="w-2 h-2 rounded-full bg-orange-500"></span> 两者</span>' :
+            p.typeStr === '高血压' ?
+            '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-primary-500"></span> 高血压</span>' :
+            '<span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-500"></span> 糖尿病</span>';
+          
+          return `
+            <tr class="table-row">
+              <td><input type="checkbox" class="patient-checkbox rounded dark:bg-gray-600" data-id="${id}" ${selectedIds.has(id) ? 'checked' : ''}></td>
+              <td class="font-medium">${p.档案号}</td>
+              <td class="font-medium text-gray-800 dark:text-white">${p.姓名}</td>
+              <td>${p.性别 || '-'}</td>
+              <td>${p.年龄 || '-'}</td>
+              <td class="text-sm">${typeBadge}</td>
+              <td class="text-sm text-gray-500">${p.村居委会 || '-'}</td>
+              <td class="${p.maxSbp >= settings.htRedSbp ? 'text-red-600 font-bold' : ''}">${p.maxSbp || '-'}</td>
+              <td class="${p.maxDbp >= settings.htRedDbp ? 'text-red-600 font-bold' : ''}">${p.maxDbp || '-'}</td>
+              <td class="${p.maxGlu >= settings.dmRedFasting ? 'text-red-600 font-bold' : ''}">${p.maxGlu?.toFixed(1) || '-'}</td>
+              <td><span class="risk-tag ${riskClass}">${riskText}</span></td>
+              <td><button class="detail-btn text-primary-600 hover:text-primary-700 font-medium" data-id="${id}">查看</button></td>
+            </tr>
+          `;
+        }).join('');
+        
+        // 绑定事件
+        document.querySelectorAll('.patient-checkbox').forEach(cb => {
+          cb.addEventListener('change', e => {
+            if (e.target.checked) selectedIds.add(e.target.dataset.id);
+            else selectedIds.delete(e.target.dataset.id);
+            updateBatchActions();
+            updateSelectAllState();
+          });
+        });
+        
+        document.querySelectorAll('.detail-btn').forEach(btn => {
+          btn.addEventListener('click', () => openDetail(btn.dataset.id));
+        });
+        
+        updateSelectAllState();
+      }
+
+      function updateSelectAllState() {
+        const start = (currentPage - 1) * pageSize;
+        const pageIds = filteredIds.slice(start, start + pageSize);
+        const allOnPage = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+        dom.selectAll.checked = allOnPage;
+      }
+
+      function updateBatchActions() {
+        if (selectedIds.size > 0) {
+          dom.batchActions.classList.remove('hidden');
+          dom.selectedCount.textContent = selectedIds.size;
+        } else {
+          dom.batchActions.classList.add('hidden');
+        }
+      }
+
+      function renderPagination() {
+        const total = filteredIds.length;
+        const totalPages = Math.ceil(total / pageSize);
+        
+        let html = '';
+        html += `<button class="page-btn" data-page="1" ${currentPage === 1 ? 'disabled' : ''}><i class="fa fa-angle-double-left"></i></button>`;
+        html += `<button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}><i class="fa fa-angle-left"></i></button>`;
+        
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        if (endPage - startPage < maxVisible - 1) {
+          startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        if (startPage > 1) {
+          html += `<button class="page-btn" data-page="1">1</button>`;
+          if (startPage > 2) html += `<span class="px-2 text-gray-400">…</span>`;
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+          html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+        }
+        
+        if (endPage < totalPages) {
+          if (endPage < totalPages - 1) html += `<span class="px-2 text-gray-400">…</span>`;
+          html += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`;
+        }
+        
+        html += `<button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa fa-angle-right"></i></button>`;
+        html += `<button class="page-btn" data-page="${totalPages}" ${currentPage === totalPages ? 'disabled' : ''}><i class="fa fa-angle-double-right"></i></button>`;
+        
+        dom.pagination.innerHTML = html;
+        
+        dom.pagination.querySelectorAll('[data-page]').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const page = parseInt(btn.dataset.page);
+            if (!isNaN(page) && page >= 1 && page <= totalPages) {
+              currentPage = page;
+              renderTable();
+              renderPagination();
+            }
+          });
+        });
+      }
+
+      // ===== 图表 =====
+      function renderCharts() {
+        // 饼图
+        if (chartInstances.pie) chartInstances.pie.destroy();
+        const vals = [...patientsMap.values()].filter(p => p.risk !== 'lost');
+        let ht = 0, dm = 0, both = 0;
+        vals.forEach(p => {
+          if (p.ht && p.dm) both++;
+          else if (p.ht) ht++;
+          else dm++;
+        });
+        
+        chartInstances.pie = new Chart(dom.diseaseTypeChart, {
+          type: 'doughnut',
+          data: {
+            labels: ['高血压', '糖尿病', '两者兼有'],
+            datasets: [{
+              data: [ht, dm, both],
+              backgroundColor: ['#3b82f6', '#f97316', '#a855f7'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            cutout: '65%'
+          }
+        });
+
+        // 风险分布
+        renderRiskDistChart();
+      }
+
+      function renderRiskDistChart() {
+        if (chartInstances.main) chartInstances.main.destroy();
+        
+        // 简单的统计展示
+        const labels = ['低危', '中危', '高危'];
+        const data = [
+          [...patientsMap.values()].filter(p => p.risk === 'green').length,
+          [...patientsMap.values()].filter(p => p.risk === 'yellow').length,
+          [...patientsMap.values()].filter(p => p.risk === 'red').length
+        ];
+        
+        chartInstances.main = new Chart(dom.riskDistChart, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: '人数',
+              data,
+              backgroundColor: ['#22c55e', '#eab308', '#ef4444'],
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { beginAtZero: true, grid: { color: document.documentElement.classList.contains('dark') ? '#334155' : '#e2e8f0' } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+
+      // ===== 详情模态框 =====
+      function openDetail(id) {
+        currentDetailId = id;
+        const p = patientsMap.get(id);
+        
+        dom.modalTitle.textContent = p.姓名;
+        dom.modalSubtitle.textContent = `档案号: ${p.档案号}`;
+        dom.detailName.textContent = p.姓名;
+        dom.detailId.textContent = p.档案号;
+        dom.detailGender.textContent = p.性别 || '-';
+        dom.detailAge.textContent = p.年龄 ? `${p.年龄}岁` : '-';
+        dom.detailType.textContent = p.typeStr;
+        dom.detailDoctor.textContent = p.随访医生 || '-';
+        dom.detailPhone.textContent = p.本人电话 || p.联系人电话 || '-';
+        dom.detailAddress.textContent = (p.村居委会 || '') + ' ' + (p.现住址组 || '');
+        
+        const riskClass = p.risk === 'lost' ? 'risk-gray' :
+                         p.risk === 'red' ? 'risk-red' :
+                         p.risk === 'yellow' ? 'risk-yellow' : 'risk-green';
+        const riskText = p.risk === 'lost' ? '失访' :
+                        p.risk === 'red' ? '高危' :
+                        p.risk === 'yellow' ? '中危' : '低危';
+        dom.detailRiskTag.className = `risk-tag ${riskClass}`;
+        dom.detailRiskTag.textContent = riskText;
+        
+        // 随访记录
+        const sorted = [...p.records].sort((a, b) => (b.随访日期 || '').localeCompare(a.随访日期 || ''));
+        dom.followupBody.innerHTML = sorted.map(r => `
+          <tr>
+            <td class="p-3">${r.随访日期 || '-'}</td>
+            <td class="p-3">${r.随访方式 || '-'}</td>
+            <td class="p-3 ${r.收缩压 >= settings.htRedSbp ? 'text-red-600 font-bold' : ''}">${r.收缩压 || '-'}</td>
+            <td class="p-3 ${r.舒张压 >= settings.htRedDbp ? 'text-red-600 font-bold' : ''}">${r.舒张压 || '-'}</td>
+            <td class="p-3">${r.心率 || '-'}</td>
+            <td class="p-3 ${r.空腹血糖值 >= settings.dmRedFasting ? 'text-red-600 font-bold' : ''}">${r.空腹血糖值?.toFixed(1) ?? '-'}</td>
+            <td class="p-3 ${r.随机血糖值 >= settings.dmRedRandom ? 'text-red-600 font-bold' : ''}">${r.随机血糖值?.toFixed(1) ?? '-'}</td>
+            <td class="p-3">${r.此次随访分类 || '-'}</td>
+          </tr>
+        `).join('');
+        
+        // 趋势图
+        renderDetailCharts(sorted);
+        
+        dom.detailModal.classList.remove('hidden');
+      }
+
+      function renderDetailCharts(records) {
+        const byDate = new Map();
+        records.forEach(r => {
+          const d = r.随访日期 || '未知';
+          if (!byDate.has(d)) {
+            byDate.set(d, { date: d, sbp: 0, dbp: 0, glu: -Infinity });
+          }
+          const cur = byDate.get(d);
+          cur.sbp = Math.max(cur.sbp, r.收缩压 || 0);
+          cur.dbp = Math.max(cur.dbp, r.舒张压 || 0);
+          if (r.空腹血糖值) cur.glu = Math.max(cur.glu, r.空腹血糖值);
+          if (r.随机血糖值) cur.glu = Math.max(cur.glu, r.随机血糖值);
+        });
+        
+        const sorted = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+        const dates = sorted.map(d => d.date);
+        const sbp = sorted.map(d => d.sbp || null);
+        const dbp = sorted.map(d => d.dbp || null);
+        const glu = sorted.map(d => d.glu === -Infinity ? null : d.glu);
+        
+        if (chartInstances.bp) chartInstances.bp.destroy();
+        if (chartInstances.glu) chartInstances.glu.destroy();
+        
+        chartInstances.bp = new Chart(dom.bpChart, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [
+              { label: '收缩压', data: sbp, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.3 },
+              { label: '舒张压', data: dbp, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.3 }
+            ]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              annotation: {
+                annotations: {
+                  line1: { type: 'line', yMin: settings.htRedSbp, yMax: settings.htRedSbp, borderColor: '#ef4444', borderWidth: 1, borderDash: [4, 4] }
+                }
+              }
+            },
+            scales: { y: { beginAtZero: false } }
+          }
+        });
+        
+        chartInstances.glu = new Chart(dom.gluChart, {
+          type: 'line',
+          data: {
+            labels: dates,
+            datasets: [{ label: '血糖', data: glu, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.3 }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              annotation: {
+                annotations: {
+                  line1: { type: 'line', yMin: settings.dmRedFasting, yMax: settings.dmRedFasting, borderColor: '#ef4444', borderWidth: 1, borderDash: [4, 4] }
+                }
+              }
+            },
+            scales: { y: { beginAtZero: false } }
+          }
+        });
+      }
+
+      // ===== 导出 =====
+      function exportList(ids = filteredIds) {
+        const data = ids.map(id => {
+          const p = patientsMap.get(id);
+          const riskMap = { red: '高危', yellow: '中危', green: '低危', lost: '失访' };
+          return {
+            档案号: p.档案号, 姓名: p.姓名, 性别: p.性别, 年龄: p.年龄,
+            身份证号: p.身份证号, 联系电话: p.本人电话 || p.联系人电话,
+            村居委会: p.村居委会, 住址: (p.村居委会 || '') + ' ' + (p.现住址组 || ''),
+            慢病类型: p.typeStr, 最高收缩压: p.maxSbp, 最高舒张压: p.maxDbp,
+            最高血糖: p.maxGlu, 风险等级: riskMap[p.risk], 失访原因: p.失访原因,
+            随访次数: p.records.length
+          };
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '患者列表');
+        XLSX.writeFile(wb, `慢病管理_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      }
+
+      // ===== 数据持久化 =====
+      function saveDataToLocal() {
+        const data = {
+          htRecords, dmRecords, manualRiskOverrides: [...manualRiskOverrides.entries()]
+        };
+        try {
+          localStorage.setItem('tricolorData', JSON.stringify(data));
+        } catch (e) {
+          console.warn('数据过大，无法保存到 localStorage');
+        }
+      }
+
+      function loadDataFromLocal() {
+        const saved = localStorage.getItem('tricolorData');
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            htRecords = data.htRecords || [];
+            dmRecords = data.dmRecords || [];
+            manualRiskOverrides = new Map(data.manualRiskOverrides || []);
+            if (htRecords.length > 0) dom.htStatus.textContent = `已导入 ${htRecords.length} 条`;
+            if (dmRecords.length > 0) dom.dmStatus.textContent = `已导入 ${dmRecords.length} 条`;
+            rebuild();
+          } catch (e) {
+            console.error('加载本地数据失败', e);
+          }
+        }
+      }
+
+      function backupData() {
+        const data = {
+          version: 1,
+          exportDate: new Date().toISOString(),
+          settings,
+          htRecords,
+          dmRecords,
+          manualRiskOverrides: [...manualRiskOverrides.entries()]
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `慢病数据备份_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('数据备份成功', 'success');
+      }
+
+      async function restoreData(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            try {
+              const data = JSON.parse(e.target.result);
+              if (data.htRecords && data.dmRecords) {
+                htRecords = data.htRecords;
+                dmRecords = data.dmRecords;
+                settings = data.settings || DEFAULT_SETTINGS;
+                manualRiskOverrides = new Map(data.manualRiskOverrides || []);
+                
+                for (let k in DEFAULT_SETTINGS) {
+                  if ($(k)) $(k).value = settings[k];
+                }
+                
+                dom.htStatus.textContent = htRecords.length > 0 ? `已导入 ${htRecords.length} 条` : '未导入';
+                dom.dmStatus.textContent = dmRecords.length > 0 ? `已导入 ${dmRecords.length} 条` : '未导入';
+                
+                rebuild();
+                showToast('数据恢复成功', 'success');
+                resolve();
+              } else {
+                reject(new Error('无效的备份文件'));
+              }
+            } catch (err) {
+              reject(err);
+            }
+          };
+          reader.readAsText(file);
+        });
+      }
+
+      // ===== 批量操作 =====
+      function batchDelete() {
+        if (!confirm(`确定要删除选中的 ${selectedIds.size} 位患者吗？此操作不可恢复。`)) return;
+        
+        for (let id of selectedIds) {
+          patientsMap.delete(id);
+          manualRiskOverrides.delete(id);
+          htRecords = htRecords.filter(r => r.档案号 !== id);
+          dmRecords = dmRecords.filter(r => r.档案号 !== id);
+        }
+        
+        selectedIds.clear();
+        updateBatchActions();
+        rebuild();
+        showToast('删除成功', 'success');
+      }
+
+      function openBatchRiskModal() {
+        dom.batchRiskCount.textContent = selectedIds.size;
+        dom.batchRiskModal.classList.remove('hidden');
+      }
+
+      function applyBatchRisk(risk) {
+        for (let id of selectedIds) {
+          manualRiskOverrides.set(id, risk);
+          const p = patientsMap.get(id);
+          if (p) p.risk = risk;
+        }
+        dom.batchRiskModal.classList.add('hidden');
+        selectedIds.clear();
+        updateBatchActions();
+        updateStats();
+        renderTable();
+        saveDataToLocal();
+        showToast('风险等级已更新', 'success');
+      }
+
+      // ===== 事件绑定 =====
+      function bindEvents() {
+        // 主题
+        dom.themeToggle.addEventListener('change', toggleTheme);
+        
+        // 侧边栏
+        dom.menuToggle.addEventListener('click', toggleSidebar);
+        
+        // 日期
+        dom.currentDate.textContent = formatDate();
+        
+        // 导入 - 高血压
+        dom.htDropZone.addEventListener('click', () => dom.htFileInput.click());
+        dom.htDropZone.addEventListener('dragover', e => e.preventDefault());
+        dom.htDropZone.addEventListener('drop', e => {
+          e.preventDefault();
+          if (e.dataTransfer.files[0]) importHt(e.dataTransfer.files[0]);
+        });
+        dom.htFileInput.addEventListener('change', e => {
+          if (e.target.files[0]) importHt(e.target.files[0]);
+          e.target.value = '';
+        });
+        
+        // 导入 - 糖尿病
+        dom.dmDropZone.addEventListener('click', () => dom.dmFileInput.click());
+        dom.dmDropZone.addEventListener('dragover', e => e.preventDefault());
+        dom.dmDropZone.addEventListener('drop', e => {
+          e.preventDefault();
+          if (e.dataTransfer.files[0]) importDm(e.dataTransfer.files[0]);
+        });
+        dom.dmFileInput.addEventListener('change', e => {
+          if (e.target.files[0]) importDm(e.target.files[0]);
+          e.target.value = '';
+        });
+        
+        // 清空与重评估
+        dom.clearAllBtn.addEventListener('click', () => {
+          if (confirm('确定要清空所有数据吗？')) {
+            htRecords = []; dmRecords = []; patientsMap.clear(); manualRiskOverrides.clear();
+            dom.htStatus.textContent = '未导入'; dom.dmStatus.textContent = '未导入';
+            rebuild();
+            showToast('数据已清空', 'info');
+          }
+        });
+        dom.reEvaluateBtn.addEventListener('click', () => {
+          manualRiskOverrides.clear();
+          rebuild();
+          showToast('已重新评估', 'success');
+        });
+        
+        // 筛选
+        dom.searchInput.addEventListener('input', () => {
+          searchTerm = dom.searchInput.value;
+          applyFiltersAndSearch();
+        });
+        dom.villageFilter.addEventListener('change', () => {
+          villageFilter = dom.villageFilter.value;
+          applyFiltersAndSearch();
+        });
+        dom.doctorFilter.addEventListener('change', () => {
+          doctorFilter = dom.doctorFilter.value;
+          applyFiltersAndSearch();
+        });
+        dom.diseaseFilter.addEventListener('change', () => {
+          diseaseFilter = dom.diseaseFilter.value;
+          applyFiltersAndSearch();
+        });
+        dom.filterChips.forEach(chip => {
+          chip.addEventListener('click', () => {
+            dom.filterChips.forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+            riskFilter = chip.dataset.filter;
+            applyFiltersAndSearch();
+          });
+        });
+        
+        // 分页
+        dom.pageSizeSelect.addEventListener('change', () => {
+          pageSize = +dom.pageSizeSelect.value;
+          currentPage = 1;
+          renderTable();
+          renderPagination();
+        });
+        
+        // 全选
+        dom.selectAll.addEventListener('change', e => {
+          const start = (currentPage - 1) * pageSize;
+          const pageIds = filteredIds.slice(start, start + pageSize);
+          if (e.target.checked) {
+            pageIds.forEach(id => selectedIds.add(id));
+          } else {
+            pageIds.forEach(id => selectedIds.delete(id));
+          }
+          updateBatchActions();
+          renderTable();
+        });
+        
+        // 批量操作
+        dom.clearSelection.addEventListener('click', () => {
+          selectedIds.clear();
+          updateBatchActions();
+          renderTable();
+        });
+        dom.batchExportBtn.addEventListener('click', () => exportList([...selectedIds]));
+        dom.batchRiskBtn.addEventListener('click', openBatchRiskModal);
+        dom.batchDeleteBtn.addEventListener('click', batchDelete);
+        
+        // 导出
+        dom.exportBtn.addEventListener('click', () => exportList());
+        
+        // 详情模态框
+        dom.detailModalOverlay.addEventListener('click', () => dom.detailModal.classList.add('hidden'));
+        dom.closeModal.addEventListener('click', () => dom.detailModal.classList.add('hidden'));
+        
+        // 设置
+        dom.settingsBtn.addEventListener('click', () => dom.settingsModal.classList.remove('hidden'));
+        dom.settingsModalOverlay.addEventListener('click', () => dom.settingsModal.classList.add('hidden'));
+        dom.closeSettings.addEventListener('click', () => dom.settingsModal.classList.add('hidden'));
+        dom.saveSettings.addEventListener('click', () => {
+          saveSettingsToStorage();
+          dom.settingsModal.classList.add('hidden');
+          rebuild();
+        });
+        dom.resetSettings.addEventListener('click', resetSettings);
+        
+        // 帮助
+        dom.helpBtn.addEventListener('click', () => dom.helpModal.classList.remove('hidden'));
+        dom.helpModalOverlay.addEventListener('click', () => dom.helpModal.classList.add('hidden'));
+        dom.closeHelp.addEventListener('click', () => dom.helpModal.classList.add('hidden'));
+        
+        // 备份恢复
+        dom.backupBtn.addEventListener('click', backupData);
+        dom.restoreBtn.addEventListener('click', () => dom.restoreInput.click());
+        dom.restoreInput.addEventListener('change', async e => {
+          if (e.target.files[0]) {
+            try {
+              await restoreData(e.target.files[0]);
+            } catch (err) {
+              showToast('恢复失败: ' + err.message, 'error');
+            }
+          }
+          e.target.value = '';
+        });
+        
+        // 批量风险
+        dom.batchRiskModalOverlay.addEventListener('click', () => dom.batchRiskModal.classList.add('hidden'));
+        dom.cancelBatchRisk.addEventListener('click', () => dom.batchRiskModal.classList.add('hidden'));
+        dom.riskBtns.forEach(btn => {
+          btn.addEventListener('click', () => applyBatchRisk(btn.dataset.risk));
+        });
+        
+        // 图表时间范围
+        dom.chartTimeRange.addEventListener('change', renderRiskDistChart);
+      }
+
+      // ===== 初始化 =====
+      function init() {
+        initTheme();
+        loadSettings();
+        bindEvents();
+        loadDataFromLocal();
+      }
+
+      init();
+    })();
+  </script>
+</body>
+</html>
